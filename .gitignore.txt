@@ -1,0 +1,30 @@
+# MATLAB autosave and backup files
+*.asv
+*.m~
+*.autosave
+
+# MATLAB generated folders
+slprj/
+codegen/
+
+# COMSOL large model and recovery files
+*.mph
+*.mphbin
+*.mph.lock
+*.recovery
+*.tmp
+
+# Large simulation outputs
+*.mat
+*.h5
+*.hdf5
+*.dat
+*.csv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
