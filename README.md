@@ -38,7 +38,6 @@ This repository is intended for:
 
 - Lab members learning or reusing COMSOL workflows
 - Researchers writing MATLAB LiveLink automation scripts
-- Users debugging COMSOL eigenmode or parameter-sweep simulations
 - AI assistants such as Codex or ChatGPT that need lab-specific simulation context
 
 ## How to Use This Repository
@@ -93,16 +92,29 @@ Commit only:
 - troubleshooting notes
 - AI instruction files
 
-## Recommended Workflow
+## Modules
 
-A typical workflow for adding new content is:
+### Module 01: LiveLink Environment Setup
 
-1. Identify a reusable simulation workflow or debugging case.
-2. Write a short note in `docs/` or `cases/`.
-3. Add or update a reusable script in `templates/` if needed.
-4. Add a validation prompt in `tests/`.
-5. Commit the changes with a clear message.
-6. Push to GitHub after checking that no large or private files are included.
+Related files:
+
+- `docs/livelink_environment_setup.md`
+- `templates/check_livelink_connection.m`
+
+Purpose:
+
+This module explains how to configure MATLAB LiveLink for COMSOL and test whether MATLAB is connected to the COMSOL server.
+
+### Module 02: Basic MATLAB LiveLink Workflow
+
+Related files:
+
+- `docs/matlab_livelink_basic_workflow.md`
+- `templates/livelink_minimal_workflow.m`
+
+Purpose:
+
+This module explains how to load a COMSOL model, set parameters, run a study, extract results, and save data.
 
 ## Current Status
 
