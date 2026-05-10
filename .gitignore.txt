@@ -7,12 +7,17 @@
 slprj/
 codegen/
 
-# COMSOL large model and recovery files
+# COMSOL model and recovery files
+# Ignore COMSOL model files by default.
+# Small teaching/example models can be explicitly allowed below.
 *.mph
 *.mphbin
 *.mph.lock
 *.recovery
 *.tmp
+
+# Allow small teaching example COMSOL models inside examples/
+!examples/**/*.mph
 
 # Large simulation outputs
 *.mat
@@ -21,10 +26,29 @@ codegen/
 *.dat
 *.csv
 
+# Allow small example metadata files if needed
+!examples/**/*.csv
+
+# COMSOL exported/generated files that are usually not source files
+*.mphthumbnail
+*.log
+*.java.bak
+
 # OS files
 .DS_Store
 Thumbs.db
 
-# Editor files
+# Editor and IDE files
 .vscode/
 .idea/
+
+# Python cache files, if helper scripts are added later
+__pycache__/
+*.pyc
+
+# Temporary files
+*.bak
+*.old
+*.swp
+*.swo
+~$*
