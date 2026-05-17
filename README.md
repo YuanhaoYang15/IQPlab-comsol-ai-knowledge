@@ -533,6 +533,51 @@ Recommended options:
 
 For teaching and debugging, manual selection is usually clearer than fully automatic dispatch.
 
+## Module 05 — Mode-Family Identification and Overlap-Based Verification
+
+Module 05 distinguishes mode families after Module 04 has filtered acceptable bound modes.
+
+Main goals:
+
+```text
+1. Use LiveLink-defined COMSOL integration variables to classify Ex/Ey-dominant modes.
+2. Control the requested number of solved modes using a global Nmode parameter.
+3. Filter lossy modes before mode-family analysis.
+4. Use normalized field-overlap integrals to verify mode similarity near crossings.
+5. Keep COMSOL run scripts separate from post-processing scripts.
+```
+
+Related files:
+
+```text
+docs/matlab_livelink_mode_family_identification.md
+
+templates/livelink_mode_family_component_ratio.m
+templates/livelink_mode_family_component_postprocess.m
+templates/livelink_mode_family_overlap_check.m
+templates/livelink_mode_family_overlap_postprocess.m
+
+cases/case_003_mode_family_identification.md
+```
+
+Core idea:
+
+```text
+Part A:
+    define component-integral variables in COMSOL
+    read accepted-mode Ex/Ey fractions
+    classify Ex_dominant, Ey_dominant, and hybrid modes
+
+Part B:
+    choose suspicious neighboring width points
+    interpolate fields for accepted modes
+    compute overlap matrices
+    distinguish field continuity from physical-character exchange
+```
+
+A diagonal overlap matrix means that neighboring eigenmode branches are field-continuous under the current sorting rule. A change in `Ex_frac_xy` or `Ey_frac_xy` along that diagonal branch means that the physical mode character is changing, which is typical near avoided crossings.
+
+
 ---
 
 ## Recommended Output Policy
