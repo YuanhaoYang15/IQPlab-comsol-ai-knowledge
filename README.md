@@ -116,6 +116,28 @@ Purpose:
 
 This module explains how to load a COMSOL model, set parameters, run a study, extract results, and save data.
 
+## Module 04 — Parameter Sweep and Batch Automation
+
+Module 04 introduces MATLAB-controlled COMSOL parameter sweeps. The example
+sweeps the waveguide width and extracts the effective index after each run.
+
+Main files:
+
+- `docs/matlab_livelink_parameter_sweep.md`
+- `templates/livelink_parameter_sweep_scalar.m`
+- `templates/livelink_parameter_sweep_postprocess.m`
+- `templates/livelink_parameter_sweep_with_integral.m`
+- `cases/case_002_waveguide_width_sweep.md`
+
+Core idea:
+
+```text
+run expensive COMSOL simulations once
+save compact sweep results
+post-process many times in MATLAB
+```
+
+
 ## Current Status
 
 This repository is under active development. The first stage focuses on optical mode solving, PML-based bound-mode filtering, MATLAB LiveLink automation, and geometry parameter sweeps.
