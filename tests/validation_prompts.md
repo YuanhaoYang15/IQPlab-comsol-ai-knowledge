@@ -1,91 +1,109 @@
-# AI Validation Prompts for COMSOL MATLAB LiveLink Repository
+# AI Validation Prompts for COMSOL LiveLink Knowledge Base
 
-## Purpose
+This file defines prompt-based validation tests for AI assistants working with this repository.
 
-This file defines practical validation tests for an AI assistant that is asked to work with this repository from zero.
+These tests are not conventional unit tests such as `pytest`.
+They are acceptance tests for checking whether an AI assistant can correctly read the repository, understand the intended COMSOL + MATLAB LiveLink workflow, avoid common simulation mistakes, and produce safe, reproducible code-review or workflow suggestions.
 
-These are not `pytest`-style software unit tests. They are prompt-based acceptance tests for checking whether an AI assistant can:
-
-1. read the repository structure correctly;
-2. follow `AGENTS.md` before writing code;
-3. distinguish validation, simulation sweep, and post-processing;
-4. avoid unsafe assumptions about COMSOL eigenmodes;
-5. produce MATLAB LiveLink scripts that are reproducible and reviewable;
-6. diagnose common COMSOL mode-analysis failure modes.
-
-Use this file when evaluating ChatGPT, Codex, or another AI assistant on this repository.
+The repository may not include large `.mph` models or raw simulation outputs.
+Therefore, the first-stage tests are designed to be run as prompt-based reviews.
+Runnable tests can be added later when a local example COMSOL model is available.
 
 ---
 
-## How to use these tests
+## How to Use This File
 
 For each test:
 
-1. Start a fresh AI chat or coding-agent session.
-2. Give the AI only the repository URL or the local repository folder.
-3. Paste the test prompt exactly.
-4. Evaluate the answer using the checklist and red flags.
-5. Record the result as:
+1. Give the AI assistant the repository link or a local clone.
+2. Copy the test prompt into the AI conversation.
+3. Compare the AI answer against the expected checklist.
+4. Record the result in a test log if available.
+5. Do not require the AI to run COMSOL unless the test explicitly says so.
+
+Recommended result labels:
 
 ```text
 PASS
 PARTIAL PASS
 FAIL
+NOT TESTED
 ```
 
-A good AI answer should cite or explicitly use repository files such as:
+Recommended test log fields:
 
 ```text
-AGENTS.md
-docs/livelink_environment_setup.md
-docs/matlab_livelink_parameter_sweep.md
-cases/case_001_validation_before_sweep.md
-cases/case_002_waveguide_width_sweep.md
-templates/*.m
+Date:
+AI model:
+Repository version / commit:
+Test ID:
+Prompt used:
+Result:
+Passed checklist items:
+Failed checklist items:
+Human notes:
 ```
-
-The AI does not need to run COMSOL unless the test explicitly says so. If the `.mph` model file is missing, the correct behavior is to state that clearly and still provide a dry-run or template-level validation plan.
 
 ---
 
-## Global scoring rubric
+## Global Rules for All AI Tests
 
-Use this rubric for every test.
+An AI assistant passes only if it follows these general rules.
 
-### PASS
+### Repository-reading rules
 
-The answer:
+The AI should:
 
-- follows `AGENTS.md` principles;
-- separates model validation, sweep execution, and post-processing;
-- does not assume the first COMSOL eigenmode is the target mode;
-- uses all-mode extraction when appropriate;
-- preserves raw results before filtering;
-- includes model path, study tag, dataset tag, and result-expression checks;
-- warns about PML-localized, radiation, substrate, or slab modes;
-- gives reproducible MATLAB code or a concrete workflow when code is requested;
-- states limitations clearly if required files are missing.
+- Read `README.md` and `AGENTS.md` before proposing major workflow changes.
+- Identify whether a task is about environment setup, model validation, parameter sweep, post-processing, debugging, or documentation.
+- Distinguish between repository knowledge-base files and local/private COMSOL model files.
+- Avoid assuming that a missing large `.mph` file is an error in the repository, because large simulation models may intentionally be excluded.
+- Avoid inventing exact model tags, dataset names, variable names, or file paths if they are not provided.
 
-### PARTIAL PASS
+### GitHub / raw-text line-break reliability rules
 
-The answer is useful but misses one or two important items, for example:
+When inspecting code or Markdown files from GitHub, the AI must be careful about line-break interpretation.
 
-- gives a reasonable workflow but no output-file structure;
-- extracts all modes but does not discuss field-profile inspection;
-- gives code but weak error handling;
-- mentions PML modes but does not give a pass/fail criterion.
+The AI should:
 
-### FAIL
+- Prefer a local `git clone`, GitHub blob page source view, or GitHub API content over web-extracted `raw.githubusercontent.com` text when judging line breaks.
+- Not claim that a source file has line-break, formatting, or syntax problems based only on a raw web-extraction view.
+- Cross-check suspicious line counts against the GitHub file page or local clone.
+- Treat mismatches such as "GitHub page shows hundreds of lines but raw extraction shows a few long lines" as a tool-reading artifact unless confirmed otherwise.
+- Clearly state uncertainty if its browsing tool may have compressed or altered newlines.
+- Ask for an uploaded file or local clone output if exact source formatting matters.
 
-The answer is unsafe or not useful, for example:
+The AI should not:
 
-- assumes `solnum = 1` or the first returned mode is correct;
-- starts a full sweep before single-geometry validation;
-- filters modes without saving raw mode-level data;
-- ignores study/dataset/result-expression tags;
-- treats every returned eigenmode as physical;
-- overwrites old output folders;
-- gives only vague GUI instructions when a reproducible script was requested.
+- Declare MATLAB, Python, Markdown, or LSF code broken solely because a web tool displayed several logical lines as one line.
+- Treat the browser-extracted line count as ground truth.
+- Recommend rewriting working code just to fix a suspected line-break issue unless the issue is verified from a reliable source.
+
+### COMSOL / LiveLink simulation rules
+
+The AI should:
+
+- Validate a single geometry before recommending a large parameter sweep.
+- Extract all candidate eigenmodes when mode ordering is ambiguous.
+- Avoid assuming that `solnum = 1` or the first returned eigenmode is the desired physical mode.
+- Check `real(neff)`, `imag(neff)`, Q/loss, field profile, and confinement diagnostics.
+- Consider PML-localized, substrate, radiation, or leaky modes as possible false positives.
+- Save raw mode data before applying filtering thresholds.
+- Separate expensive COMSOL computation from cheap post-processing when possible.
+- Distinguish physical assumptions from coding assumptions.
+
+### MATLAB coding rules
+
+The AI should:
+
+- Use explicit parameter/configuration blocks.
+- Preserve existing variable names when reasonable.
+- Use `fullfile` for path construction when practical.
+- Specify study, dataset, and `solnum` when extracting results.
+- Preallocate arrays or use structured storage for sweep data.
+- Use `NaN` padding or tables/cell arrays for variable-length mode lists.
+- Save metadata together with numerical results.
+- Avoid hidden dependence on the current MATLAB folder.
 
 ---
 
@@ -93,7 +111,7 @@ The answer is unsafe or not useful, for example:
 
 ## Goal
 
-Check whether the AI can understand the purpose, structure, and operating rules of the repository before editing files.
+Check whether the AI can correctly identify the purpose and scope of the repository.
 
 ## Prompt
 
@@ -102,32 +120,30 @@ You are given this repository:
 
 https://github.com/YuanhaoYang15/IQPlab-comsol-ai-knowledge
 
-Start from zero. Read the repository structure and summarize what this repo is for.
-Then explain which files an AI assistant should read first before modifying MATLAB LiveLink scripts.
-Do not write code yet.
+Before writing any code, summarize what this repository is for, what files you should read first, and what kinds of tasks it is designed to support. Also state what kinds of files or tasks are intentionally not included.
 ```
 
 ## Expected answer checklist
 
-A good answer should mention:
+The AI should mention:
 
-- this is a COMSOL MATLAB LiveLink knowledge base for integrated photonics simulations;
-- `AGENTS.md` is the first file an AI assistant should read;
-- `docs/` contains workflow and environment notes;
-- `templates/` contains reusable MATLAB LiveLink scripts;
-- `cases/` contains scenario-based validation and sweep examples;
-- `tests/validation_prompts.md` contains AI acceptance tests;
-- large `.mph` files may be omitted from GitHub;
-- AI should not assume returned eigenmodes are physical.
+- This is a COMSOL + MATLAB LiveLink knowledge base for AI-assisted simulation workflows.
+- `README.md` and `AGENTS.md` should be read first.
+- `docs/` contains workflow notes.
+- `templates/` contains reusable MATLAB LiveLink scripts.
+- `cases/` contains validation and example workflows.
+- `tests/` contains AI validation prompts/checklists.
+- Large `.mph`, `.mat`, `.h5`, raw CSV, and confidential lab files may be intentionally excluded.
+- The repo is intended to support reproducible simulation setup, validation, sweep automation, post-processing, and code review.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- ignores `AGENTS.md`;
-- claims the repository is a general MATLAB toolbox only;
-- assumes all examples are directly runnable without checking missing `.mph` files;
-- proposes editing scripts before reading the validation cases.
+- Treats the repository as a general MATLAB package only.
+- Ignores `AGENTS.md`.
+- Claims that the repository is broken simply because large `.mph` files are missing.
+- Promises to run COMSOL without access to local COMSOL/MATLAB.
 
 ---
 
@@ -135,95 +151,86 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI understands the required validation before launching a parameter sweep.
+Check whether the AI understands why a single-geometry validation should happen before a full parameter sweep.
 
 ## Prompt
 
 ```text
-Read AGENTS.md and cases/case_001_validation_before_sweep.md.
+Read cases/case_001_validation_before_sweep.md.
 
-Explain the minimum validation workflow that should be completed before launching any COMSOL MATLAB LiveLink parameter sweep.
-Then write or modify a MATLAB script that:
-
-1. loads one example .mph model;
-2. optionally sets one representative geometry parameter;
-3. runs one mode-analysis study;
-4. extracts all values of ewfd.neff using solnum = all;
-5. estimates loss_dB_per_cm and Q_est for every returned mode;
-6. saves a raw mode table and configuration metadata;
-7. prints a pass/fail checklist for whether the model is ready for a full sweep.
-
-Do not launch a parameter sweep.
-Do not assume the first returned mode is the target mode.
+Explain the purpose of this case. Then propose a practical validation checklist that should be completed before running any large COMSOL parameter sweep.
 ```
 
 ## Expected answer checklist
 
-A good answer should include:
+The AI should include:
 
-- a clear user-editable configuration section;
-- `modelPath`, `studyTag`, `datasetTag`, `lambda0_um`, and output folder settings;
-- `mphload` or equivalent model-loading logic;
-- `model.study(studyTag).run` or equivalent study-run logic;
-- `mphglobal(..., 'solnum', 'all', 'Complexout', 'on')` for all returned modes;
-- calculation of `real_neff`, `imag_neff`, `loss_dB_per_cm`, and `Q_est`;
-- `table(...)` output for mode-level results;
-- saving to a timestamped local output folder;
-- no overwrite of old results;
-- field-profile inspection listed as required before accepting modes;
-- warning that scalar metrics alone are insufficient.
+- Verify COMSOL LiveLink connection.
+- Verify model path and model loading.
+- Verify geometry parameters can be updated.
+- Verify correct study tag.
+- Verify correct dataset tag.
+- Extract all candidate modes, not only the first one.
+- Check `real(neff)` and `imag(neff)`.
+- Check loss/Q or equivalent bound-mode diagnostic.
+- Check field confinement in the intended waveguide region.
+- Check for PML-localized, substrate, or radiation modes.
+- Save a single-point validation output.
+- Only proceed to full sweep after the selected mode family is physically reasonable.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- uses only `solnum = 1`;
-- picks the mode with largest `real(neff)` without further checks;
-- starts sweeping `w_ln` or another parameter;
-- does not save raw all-mode data;
-- ignores PML or substrate modes;
-- hard-codes machine-specific paths without explaining them.
+- Says a large sweep can start immediately after the model loads.
+- Selects the first eigenmode by default.
+- Ignores field profile and confinement checks.
+- Ignores PML false modes.
 
 ---
 
-# Test 002 — MATLAB Template Sanity Check
+# Test 002 — MATLAB Template Source-Format Sanity Check
 
 ## Goal
 
-Check whether the AI can review repository MATLAB templates for basic runnability and formatting before using them.
+Check whether the AI can review MATLAB templates without being misled by unreliable GitHub raw-text line extraction.
 
 ## Prompt
 
 ```text
-Review the MATLAB files in templates/ for basic syntax and runnability issues.
-Focus especially on whether section comments, line breaks, user-input blocks, and function/script boundaries are safe for MATLAB.
+Review the MATLAB templates in the repository.
 
-Give a concise report of likely problems and provide corrected versions or patch-style replacements when necessary.
-Do not change the physical workflow unless needed for correctness.
+First, explain how you would verify whether the files are correctly formatted and runnable. Be especially careful: browser or AI web tools may display GitHub raw files with incorrect line breaks.
+
+Then identify the kinds of coding or workflow issues you would look for before running the scripts.
 ```
 
 ## Expected answer checklist
 
-A good answer should:
+The AI should say:
 
-- inspect raw `.m` file formatting rather than only rendered GitHub previews;
-- notice dangerous one-line formatting if code appears on the same physical line as `%%` section comments;
-- avoid changing scientific assumptions while fixing formatting;
-- preserve variable names when possible;
-- keep user-editable configuration at the top;
-- keep output folders timestamped;
-- keep all-mode extraction logic where appropriate;
-- explain which files were changed and why.
+- It should not infer line-break problems from raw web-extraction alone.
+- It should verify source formatting using one of:
+  - local `git clone`
+  - GitHub blob/source view
+  - GitHub API content
+  - user-uploaded file
+- It should compare suspicious line counts against reliable views.
+- It should distinguish real MATLAB syntax errors from tool-rendering artifacts.
+- It should check study tags, dataset tags, model path, parameter names, extraction expressions, and `solnum`.
+- It should check whether raw modes are saved before filtering.
+- It should check whether computation and post-processing are separated.
+- It should check whether variable-length mode lists are stored robustly.
+- It should check whether paths are machine-specific and configurable.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- says the templates are runnable without checking raw file contents;
-- rewrites everything into unrelated code;
-- removes all-mode extraction;
-- removes saving of raw data;
-- introduces hidden global state or undocumented dependencies.
+- Claims a template has broken newlines based only on a raw web extraction.
+- Recommends rewriting the whole template because a browser tool compressed line breaks.
+- Treats a web-extracted line count as ground truth.
+- Ignores COMSOL-specific issues and only comments on generic MATLAB style.
 
 ---
 
@@ -231,52 +238,38 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI can use Case 002 to design a safe parameter sweep workflow.
+Check whether the AI understands a width sweep that stores all modes and filters bound modes afterward.
 
 ## Prompt
 
 ```text
-Read AGENTS.md and cases/case_002_waveguide_width_sweep.md.
+Read cases/case_002_waveguide_width_sweep.md and the relevant MATLAB sweep template.
 
-Design a MATLAB LiveLink workflow for sweeping the waveguide width w_ln.
-The workflow should:
-
-1. set w_ln for each sweep point;
-2. run the mode-analysis study;
-3. extract all returned ewfd.neff values;
-4. estimate loss and Q for every mode;
-5. save raw all-mode data for every width;
-6. apply a configurable loss or Q threshold only after raw data are saved;
-7. generate a CSV summary of accepted modes;
-8. avoid plotting inside the expensive simulation script.
-
-Explain how this differs from the single-geometry validation in Case 001.
+Explain the intended workflow for sweeping waveguide width and selecting physically meaningful modes. What raw data should be saved, and what should be done in post-processing?
 ```
 
 ## Expected answer checklist
 
-A good answer should include:
+The AI should mention:
 
-- clear distinction between Case 001 and Case 002;
-- sweep list such as `cfg.wList_um`;
-- loop over width values;
-- `try/catch` or equivalent failed-geometry handling;
-- `solnum = 'all'` extraction;
-- storage of variable-length mode lists using tables, structs, or `NaN` padding;
-- raw `.mat` save before mode filtering;
-- configurable thresholds such as `maxLoss_dB_per_cm` or `minQ_est`;
-- separate post-processing script recommendation;
-- diagnostic interpretation of too many or too few accepted modes.
+- Sweep a geometry parameter such as waveguide width.
+- Run the eigenmode/mode-analysis study at each sweep point.
+- Extract all candidate modes.
+- Store `real(neff)`, `imag(neff)`, loss/Q, and confinement metrics for each mode.
+- Use a bound-mode filter such as loss threshold, `imag(neff)` threshold, Q threshold, or field localization.
+- Do not permanently discard raw modes during the sweep.
+- Post-processing can later change thresholds without rerunning COMSOL.
+- Sort or track modes consistently.
+- Inspect suspicious points with field plots or additional diagnostics.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- extracts only one mode per width;
-- overwrites results from previous runs;
-- applies thresholds before preserving raw data;
-- mixes plotting, simulation, and post-processing into one hard-to-rerun script;
-- assumes the accepted mode family is tracked correctly only by mode index.
+- Stores only the best selected mode and discards all other modes.
+- Hard-codes one `solnum`.
+- Does not save raw results.
+- Does not separate sweep computation from threshold-based post-processing.
 
 ---
 
@@ -284,40 +277,40 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI keeps expensive simulation runs separate from cheap threshold tuning and plotting.
+Check whether the AI can design a post-processing workflow that changes mode-selection thresholds without rerunning expensive simulations.
 
 ## Prompt
 
 ```text
-I already ran a COMSOL MATLAB LiveLink width sweep and saved raw all-mode data.
-Now I want to change the loss threshold and regenerate summary plots.
+Suppose a COMSOL width sweep has already saved all raw candidate modes at every width. I now want to change the bound-mode criterion from an absolute imaginary-index threshold to a relative threshold:
 
-Write a MATLAB post-processing workflow that loads existing results and does not call COMSOL at all.
-It should allow me to change the threshold and regenerate accepted-mode tables and diagnostic plots.
+imag(neff) < threshold * real(neff)
+
+Design a MATLAB post-processing workflow for this change. Do not rerun COMSOL.
 ```
 
 ## Expected answer checklist
 
-A good answer should:
+The AI should include:
 
-- explicitly avoid `mphload`, `mphstart`, and `model.study(...).run`;
-- load existing `.mat` or `.csv` result files;
-- allow threshold parameters to be changed at the top;
-- rebuild accepted-mode summaries from raw mode data;
-- produce diagnostic plots from saved data only;
-- keep raw data unchanged;
-- save new post-processed results in a separate folder or with clear filenames;
-- warn that changing threshold cannot fix wrong physics or bad mode extraction.
+- Load saved raw sweep data.
+- Loop over sweep points and candidate modes.
+- Apply the new relative criterion.
+- Preserve or output all passing modes.
+- Sort passing modes by `real(neff)` if needed.
+- Use `NaN` padding, cell arrays, or tables for variable numbers of passing modes.
+- Save processed results separately from raw data.
+- Include metadata such as threshold value and date.
+- Avoid calling `model.study(...).run`.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- re-runs COMSOL;
-- modifies raw results;
-- cannot handle multiple modes per sweep point;
-- chooses modes only by array index;
-- gives plotting code that depends on hidden variables from the simulation script.
+- Re-runs COMSOL.
+- Assumes one valid mode per sweep point.
+- Overwrites raw results.
+- Confuses `real(neff)` and `imag(neff)`.
 
 ---
 
@@ -325,41 +318,35 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI can diagnose false-positive modes in a PML-based optical mode-analysis simulation.
+Check whether the AI can diagnose false-positive modes in PML or substrate regions.
 
 ## Prompt
 
 ```text
-In my COMSOL mode-analysis sweep, some returned modes have very small imag(neff), so the estimated loss is low.
-However, the field profile looks mostly in the substrate or near the PML, not inside the lithium-niobate waveguide.
+In a COMSOL mode analysis with PML, I found a mode with extremely small imaginary part and very high Q. However, the field plot shows most of the field in the PML/substrate region rather than the waveguide.
 
-How should I diagnose this? Should I accept the low-loss mode as a bound waveguide mode?
-Give a practical debugging checklist and suggest what scalar quantities I should extract in addition to ewfd.neff.
+How should this mode be interpreted, and how should the selection workflow be modified?
 ```
 
 ## Expected answer checklist
 
-A good answer should say:
+The AI should say:
 
-- do not accept the mode based only on low `imag(neff)`;
-- inspect field profile and confinement;
-- check whether the mode is substrate, slab, radiation, or PML-localized;
-- extract region-integral quantities such as `frac_E2_LN` or core energy fraction;
-- compare loss against confinement metrics;
-- check PML distance, PML thickness, mesh, and boundary conditions;
-- check effective-index range relative to material indices;
-- request more modes if needed;
-- use mode-family tracking or overlap later for sweeps.
+- Low loss alone does not guarantee a physical guided mode.
+- The mode may be PML-localized, substrate-like, radiation-like, or numerically spurious.
+- Add field-confinement diagnostics in the waveguide/core region.
+- Use energy or field integrals over selected domains.
+- Combine loss/Q filtering with confinement filtering.
+- Inspect field profiles for representative modes.
+- Save diagnostic metrics for every candidate mode.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- says low loss is sufficient to accept the mode;
-- recommends simply loosening the threshold;
-- ignores PML effects;
-- ignores field-profile inspection;
-- cannot distinguish numerical modes from physical guided modes.
+- Says the highest-Q mode should always be selected.
+- Ignores field localization.
+- Treats PML modes as valid guided modes.
 
 ---
 
@@ -367,38 +354,37 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI handles anisotropic lithium-niobate simulations carefully.
+Check whether the AI understands that anisotropic material tensors require axis and coordinate sanity checks.
 
 ## Prompt
 
 ```text
-I am using anisotropic lithium niobate in a COMSOL optical mode-analysis model.
-Before trusting the sweep results, what coordinate and material-tensor checks should I perform?
-Assume the model may be z-cut or x-cut, and the propagation direction may differ between models.
+I am using anisotropic lithium niobate in a COMSOL 2D mode analysis model controlled from MATLAB. The effective index results look suspicious after I rotate the material tensor.
+
+What checks should I perform before trusting the sweep results?
 ```
 
 ## Expected answer checklist
 
-A good answer should mention:
+The AI should mention:
 
-- crystal cut must be identified explicitly;
-- propagation direction must be identified explicitly;
-- COMSOL coordinate convention must be checked;
-- distinguish refractive-index tensor from relative-permittivity tensor;
-- tensor rotation order must be documented;
-- ordinary and extraordinary indices must be assigned to the correct crystal axes;
-- mode polarization interpretation depends on propagation direction;
-- test with simple limiting cases before full sweep;
-- compare expected `neff` ranges with physical material indices.
+- Confirm COMSOL coordinate convention.
+- Confirm model coordinate axes and crystal axes.
+- Check whether the tensor is entered as relative permittivity, not refractive index.
+- Confirm `epsilon = n^2` for principal axes.
+- Verify rotation matrix order and sign convention.
+- Test simple limiting cases before sweeping.
+- Compare with expected ordinary/extraordinary index limits.
+- Document whether the model is z-cut, x-cut, propagation direction, and field polarization.
+- Avoid interpreting sweep trends before tensor sanity checks pass.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- assumes z-cut and x-cut use the same tensor orientation;
-- confuses `n` and `epsilon_r = n^2`;
-- ignores propagation direction;
-- gives a final TE/TM label without checking field components or coordinate convention.
+- Treats anisotropic LN as scalar index without noting the assumption.
+- Ignores coordinate-system conventions.
+- Gives a rotation formula without checking sign/order.
 
 ---
 
@@ -406,42 +392,38 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI understands that mode tracking across a sweep requires more than sorting by effective index.
+Check whether the AI can propose a robust mode-family tracking strategy across a geometry sweep.
 
 ## Prompt
 
 ```text
-I swept waveguide width and extracted several modes at every width.
-The modes sometimes cross or hybridize, and sorting by real(neff) gives discontinuous branches.
+During a waveguide-width sweep, the order of COMSOL eigenmodes changes. The target mode is not always `solnum = 1`. Sometimes two modes approach and hybridize.
 
-Design a robust mode-family tracking strategy for the next module.
-It should use saved all-mode data and, if necessary, field-overlap information.
-Do not re-run the whole sweep unless absolutely necessary.
+Design a robust mode-family tracking strategy.
 ```
 
 ## Expected answer checklist
 
-A good answer should include:
+The AI should include:
 
-- use saved all-mode data first;
-- sort-by-`neff` is not sufficient near crossings or hybridization;
-- use overlap between fields at neighboring sweep points when field data are available;
-- construct an overlap matrix between modes at adjacent parameter points;
-- choose assignments using maximum overlap or an assignment algorithm;
-- include continuity constraints for `real(neff)`, loss, and confinement metrics;
-- identify ambiguous regions and flag them for manual inspection;
-- preserve raw branch assignments and allow reprocessing;
-- explain that true mode hybridization may make labels physically ambiguous.
+- Extract all modes at each sweep point.
+- Use field overlap between neighboring sweep points.
+- Include `real(neff)` continuity as a secondary metric.
+- Include confinement or polarization fraction as additional diagnostics.
+- Handle crossings/anti-crossings carefully.
+- Do not rely only on mode index order.
+- Save an overlap matrix or tracking score.
+- Flag ambiguous points for manual inspection.
+- Store raw modes so tracking can be rerun.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- says sorting by descending `real(neff)` is always enough;
-- ignores field profiles;
-- overwrites raw data with tracked branches only;
-- hides ambiguous mode crossings;
-- assumes diagonal overlap must always mean no mode change without interpretation.
+- Sorts only by `real(neff)` and assumes that is always enough.
+- Uses only `solnum`.
+- Ignores hybridization and ambiguous points.
+- Discards raw field data needed for overlap checks.
 
 ---
 
@@ -449,42 +431,41 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI can review a proposed repository change using project rules.
+Check whether the AI can review a proposed MATLAB LiveLink script before committing it.
 
 ## Prompt
 
 ```text
-Review my proposed change before I commit it:
-
-- I added a MATLAB LiveLink parameter sweep script.
-- The script runs COMSOL, filters modes by loss threshold, plots the final heatmap, and saves only the accepted mode at each parameter point.
-- It overwrites the previous output folder each time.
-
-Is this acceptable for this repository? If not, explain what should be changed before commit.
+I want to commit a new MATLAB LiveLink script to this repository. What review checklist should the AI apply before approving the commit?
 ```
 
 ## Expected answer checklist
 
-A good answer should say this is not acceptable as-is because:
+The AI should check:
 
-- expensive simulation and plotting should be separated;
-- raw all-mode data must be saved before filtering;
-- accepted-mode-only output is insufficient for changing thresholds later;
-- overwriting previous output folders is unsafe;
-- user-editable parameters should be clear;
-- output metadata should include sweep parameters, study/dataset tags, thresholds, and expressions;
-- plots should be generated in a post-processing script or at least from saved data;
-- the script should handle failed geometries and missing modes.
+- Does the script have a clear purpose?
+- Are user-configurable parameters grouped at the top?
+- Are machine-specific paths isolated?
+- Is model loading explicit?
+- Are study and dataset tags configurable?
+- Are COMSOL parameters updated explicitly?
+- Are all candidate modes saved when mode ambiguity is possible?
+- Are raw and processed outputs separated?
+- Are units documented?
+- Are output filenames descriptive?
+- Is metadata saved?
+- Are large generated files excluded from git?
+- Are there no confidential paths or lab data committed?
+- Are line-break or formatting claims verified using reliable source access, not only raw web extraction?
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- approves the change without concerns;
-- focuses only on plot aesthetics;
-- ignores raw data preservation;
-- ignores overwrite risk;
-- ignores separation between computation and post-processing.
+- Reviews only style and ignores physical/simulation validity.
+- Ignores `.gitignore` and large-file risk.
+- Does not mention raw data preservation.
+- Claims formatting errors from unreliable raw-source rendering.
 
 ---
 
@@ -492,36 +473,32 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI behaves correctly when the example `.mph` file is not present in the GitHub repository.
+Check whether the AI handles missing `.mph` example files safely.
 
 ## Prompt
 
 ```text
-I cloned the repository and tried to run the minimal LiveLink script, but examples/LN_ridge_waveguide_Zcut.mph is missing.
-What should I do?
-Should the AI assistant still be able to help me test the repository?
+The repository does not include the actual COMSOL `.mph` model needed to run a template. Is this a problem? How should the AI proceed?
 ```
 
 ## Expected answer checklist
 
-A good answer should say:
+The AI should say:
 
-- the `.mph` file may be intentionally omitted because it is large, private, or model-specific;
-- this prevents true end-to-end execution but not documentation/template review;
-- use a local `.mph` file and update `modelPath`;
-- first run connection and path checks;
-- verify study tag, dataset tag, and result expressions in the local model;
-- do a dry-run review of scripts if COMSOL execution is unavailable;
-- do not fabricate expected numerical results without running a model.
+- It may be intentional because `.mph` files are often large and machine/lab specific.
+- The AI can still review workflow, code structure, and expected extraction logic.
+- For runnable validation, the user should provide a local model path or a small sanitized example model.
+- The AI should not invent a model file.
+- The AI should provide placeholders for `modelFile`, `studyTag`, `datasetTag`, and relevant parameter names.
+- The AI can propose dry-run checks that do not require COMSOL.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- claims the repository is broken only because the `.mph` file is absent;
-- invents numerical results;
-- ignores the need to update `modelPath`;
-- suggests committing large private `.mph` files without considering `.gitignore` and confidentiality.
+- Says the repo is unusable because no `.mph` file is committed.
+- Invents a model file path.
+- Claims to have run COMSOL without access.
 
 ---
 
@@ -529,91 +506,187 @@ Fail the answer if it:
 
 ## Goal
 
-Check whether the AI can propose a realistic staged test plan for the whole repository without overpromising.
+Check whether the AI can design a staged dry-run plan before a real COMSOL sweep.
 
 ## Prompt
 
 ```text
-I want to test whether this repository is ready for a new AI assistant to use from zero.
-Design a staged validation plan.
-Assume COMSOL may not be available in the first stage, and the example .mph file may be missing from GitHub.
+Design an end-to-end dry-run plan for using this repository to perform a new COMSOL mode-analysis sweep from scratch. Assume I have a local `.mph` model but do not want to start a long sweep until the setup is validated.
 ```
 
 ## Expected answer checklist
 
-A good answer should propose stages such as:
+The AI should include stages:
 
-1. repository structure and documentation review;
-2. MATLAB template syntax and formatting check;
-3. LiveLink environment connection check;
-4. local `.mph` path and tag validation;
-5. Case 001 single-geometry validation;
-6. Case 002 small sweep with all-mode extraction;
-7. post-processing threshold change without re-running COMSOL;
-8. failure-mode diagnosis tests;
-9. optional mode-family tracking tests;
-10. final commit-readiness review.
-
-It should also distinguish:
-
-- documentation-only tests;
-- dry-run code review tests;
-- local COMSOL execution tests;
-- physics-result validation tests.
+1. Read repository instructions.
+2. Confirm MATLAB-COMSOL LiveLink connection.
+3. Load the local `.mph` model.
+4. Inspect or confirm model parameters.
+5. Run one baseline geometry.
+6. Extract all candidate modes.
+7. Check mode diagnostics.
+8. Save single-point validation data.
+9. Run a very small sweep, such as 2–3 points.
+10. Check continuity and mode selection.
+11. Only then run the full sweep.
+12. Save raw data and metadata.
+13. Run post-processing separately.
+14. Produce summary plots and diagnostic plots.
 
 ## Red flags
 
-Fail the answer if it:
+Fail if the AI:
 
-- requires COMSOL for every test;
-- claims documentation review alone proves end-to-end readiness;
-- skips single-geometry validation;
-- skips post-processing-only tests;
-- does not state what cannot be verified without `.mph` and COMSOL.
+- Starts with a full sweep.
+- Skips single-geometry validation.
+- Skips raw data saving.
+- Skips mode-family diagnostics.
 
 ---
 
-## Recommended validation record format
+# Test 011 — GitHub Reading Reliability and Line-Break Misdiagnosis
 
-Use this simple table to record AI test results.
+## Goal
 
-```text
-Date:
-AI system/model:
-Repository commit hash:
-Tester:
+Explicitly test whether the AI can avoid false claims about line-break problems caused by GitHub/raw extraction artifacts.
 
-| Test ID | Result | Notes |
-|---|---|---|
-| 000 | PASS / PARTIAL PASS / FAIL | |
-| 001 | PASS / PARTIAL PASS / FAIL | |
-| 002 | PASS / PARTIAL PASS / FAIL | |
-| 003 | PASS / PARTIAL PASS / FAIL | |
-| 004 | PASS / PARTIAL PASS / FAIL | |
-| 005 | PASS / PARTIAL PASS / FAIL | |
-| 006 | PASS / PARTIAL PASS / FAIL | |
-| 007 | PASS / PARTIAL PASS / FAIL | |
-| 008 | PASS / PARTIAL PASS / FAIL | |
-| 009 | PASS / PARTIAL PASS / FAIL | |
-| 010 | PASS / PARTIAL PASS / FAIL | |
-```
-
-Recommended summary:
+## Prompt
 
 ```text
-Overall readiness:
-- Documentation-level AI test: ready / not ready
-- MATLAB-template AI test: ready / not ready
-- Local COMSOL execution test: ready / not ready
-- End-to-end sweep test: ready / not ready
+I asked an AI to inspect a MATLAB template in my GitHub repo. The AI opened a raw GitHub URL and claimed the file had broken line breaks because many lines appeared merged together. However, the GitHub file page and my local MATLAB-tested copy show normal line breaks.
 
-Blocking issues:
-1.
-2.
-3.
-
-Next actions:
-1.
-2.
-3.
+How should the AI revise its conclusion? What is the correct way to verify whether the file really has a line-break or syntax problem?
 ```
+
+## Expected answer checklist
+
+The AI should say:
+
+- It should retract or qualify the earlier claim.
+- The raw web-extraction display may have compressed, merged, or mis-segmented newlines.
+- The GitHub blob/source page or local clone is more reliable for source formatting.
+- Local successful MATLAB execution is strong evidence against line-break syntax problems.
+- A correct verification method is:
+  - clone the repo and inspect with `git`
+  - run `wc -l` or equivalent line-count check
+  - open the file in an editor
+  - run MATLAB syntax check or execute a minimal test
+  - compare with GitHub blob page
+- The AI should not recommend code changes based solely on unreliable raw rendering.
+- The AI should separate possible tool-reading artifacts from real code issues.
+
+## Red flags
+
+Fail if the AI:
+
+- Continues to insist the code is broken without reliable evidence.
+- Treats the raw extracted view as ground truth.
+- Ignores local successful execution.
+- Fails to explain the difference between actual file content and tool-rendered content.
+
+---
+
+# Test 012 — Minimal Runnable Test Design with Local Model
+
+## Goal
+
+Check whether the AI can design a real runnable validation test when a local `.mph` model is available.
+
+## Prompt
+
+```text
+I have a local COMSOL `.mph` model and want to turn this repository's knowledge into a minimal runnable validation test. The `.mph` file itself will not be committed to GitHub.
+
+What files should I add or modify, and what should the test check?
+```
+
+## Expected answer checklist
+
+The AI should suggest:
+
+- Keep the `.mph` file local or in an ignored `local_models/` folder.
+- Add a user-editable config file or template such as:
+  - `examples/config_local_template.m`
+  - `examples/config_local_template.json`
+- Add a minimal run script that:
+  - loads the model
+  - sets one geometry
+  - runs one study
+  - extracts all modes
+  - saves raw output
+  - writes a small summary table
+- Add an expected-output checklist rather than committing large raw simulation files.
+- Add `.gitignore` rules for local models and large outputs.
+- Add a small mock output only if it is sanitized and useful.
+- Document required local variables:
+  - model path
+  - COMSOL server/LiveLink setup
+  - study tag
+  - dataset tag
+  - parameter names
+  - extraction variables
+- Include failure diagnostics for connection, missing tags, no modes, and suspicious modes.
+
+## Red flags
+
+Fail if the AI:
+
+- Suggests committing large `.mph` files by default.
+- Assumes the test can run on GitHub Actions without COMSOL licensing.
+- Hard-codes the user's local path.
+- Only tests whether MATLAB syntax runs and ignores physical mode validity.
+
+---
+
+# Suggested First Test Batch
+
+For the first round of AI evaluation, use:
+
+```text
+Test 000
+Test 001
+Test 002
+Test 011
+```
+
+These tests do not require COMSOL or MATLAB execution.
+They mainly check whether the AI can correctly understand the repository and avoid tool-induced source-format misdiagnosis.
+
+For the second round, use:
+
+```text
+Test 003
+Test 004
+Test 005
+Test 007
+```
+
+These tests check whether the AI understands mode sweeps, raw data saving, bound-mode filtering, and mode-family tracking.
+
+For a later local runnable test, use:
+
+```text
+Test 010
+Test 012
+```
+
+These tests require a local `.mph` model and a configured MATLAB-COMSOL LiveLink environment.
+
+---
+
+# Notes for Human Evaluators
+
+A good AI answer does not need to match the wording in this file exactly.
+It should match the workflow logic and avoid the listed red flags.
+
+The most important failure modes to catch are:
+
+- selecting the first COMSOL eigenmode by default
+- trusting Q/loss without checking field confinement
+- running a full sweep before single-point validation
+- discarding raw mode data
+- mixing computation and post-processing
+- inventing missing COMSOL tags or model paths
+- committing large private simulation files
+- claiming line-break or syntax problems based only on unreliable GitHub raw-text extraction
+

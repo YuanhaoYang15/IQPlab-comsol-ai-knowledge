@@ -11,6 +11,7 @@ Module 01  LiveLink environment setup
 Module 02  Basic single-run LiveLink workflow
 Module 03  Result extraction and post-processing
 Module 04  Parameter sweep with bound-mode filtering
+Module 05  Mode-family identification and overlap-based verification
 ```
 
 ---
@@ -41,6 +42,7 @@ docs/livelink_environment_setup.md
 docs/matlab_livelink_basic_workflow.md
 docs/matlab_livelink_result_extraction.md
 docs/matlab_livelink_parameter_sweep.md
+docs/matlab_livelink_mode_family_identification.md
 ```
 
 ### `templates/`
@@ -56,6 +58,10 @@ templates/livelink_result_extraction_2d_fields.m
 templates/livelink_parameter_sweep_bound_modes.m
 templates/livelink_parameter_sweep_with_integral.m
 templates/livelink_parameter_sweep_postprocess.m
+templates/livelink_mode_family_component_ratio.m
+templates/livelink_mode_family_component_postprocess.m
+templates/livelink_mode_family_overlap_check.m
+templates/livelink_mode_family_overlap_postprocess.m
 ```
 
 ### `cases/`
@@ -67,6 +73,7 @@ Current case files include:
 ```text
 cases/case_001_validation_before_sweep.md
 cases/case_002_waveguide_width_sweep.md
+cases/case_003_mode_family_identification.md
 ```
 
 ### `examples/`
@@ -89,7 +96,7 @@ This repository is intended for:
 - researchers writing MATLAB LiveLink automation scripts;
 - users debugging optical mode-analysis simulations;
 - users organizing parameter sweeps and post-processing pipelines;
-- AI coding assistants such as Codex or ChatGPT that need lab-specific simulation context.
+- AI coding assistants such as ChatGPT, Codex, Claude, Gemini, Copilot, Cursor, or other local/agent-style tools that need lab-specific simulation context.
 
 ---
 
@@ -110,6 +117,8 @@ The current focus includes:
 - all-mode extraction during geometry sweeps;
 - bound-mode filtering using `imag(neff)`, loss, or Q thresholds;
 - diagnostic field-fraction quantities such as `frac_E2_LN`;
+- mode-family identification using component-ratio diagnostics;
+- overlap-based mode continuity checks across geometry sweeps;
 - reproducible data saving and post-processing.
 
 ---
@@ -125,6 +134,7 @@ Recommended reading order:
 2. docs/matlab_livelink_basic_workflow.md
 3. docs/matlab_livelink_result_extraction.md
 4. docs/matlab_livelink_parameter_sweep.md
+5. docs/matlab_livelink_mode_family_identification.md
 ```
 
 Recommended script order:
@@ -136,6 +146,10 @@ Recommended script order:
 4. templates/livelink_parameter_sweep_bound_modes.m
 5. templates/livelink_parameter_sweep_with_integral.m
 6. templates/livelink_parameter_sweep_postprocess.m
+7. templates/livelink_mode_family_component_ratio.m
+8. templates/livelink_mode_family_component_postprocess.m
+9. templates/livelink_mode_family_overlap_check.m
+10. templates/livelink_mode_family_overlap_postprocess.m
 ```
 
 Recommended case-study order:
@@ -143,6 +157,7 @@ Recommended case-study order:
 ```text
 1. cases/case_001_validation_before_sweep.md
 2. cases/case_002_waveguide_width_sweep.md
+3. cases/case_003_mode_family_identification.md
 ```
 
 ### For AI coding assistants
@@ -159,6 +174,162 @@ tests/      for checking whether answers are trustworthy
 ```
 
 The preferred response style is practical and reproducible: identify the model assumption, give complete code when appropriate, preserve raw results, and avoid trusting a mode only because COMSOL returned it.
+
+---
+
+## Using This Repository with AI Assistants
+
+This repository is public so that lab members can give the repository URL directly to AI assistants. However, different AI tools access GitHub in different ways, and these access methods have different reliability levels.
+
+### 1. Web/chatbot access
+
+A simple chatbot can usually read this repository from the public GitHub URL:
+
+```text
+https://github.com/YuanhaoYang15/IQPlab-comsol-ai-knowledge
+```
+
+A recommended first prompt is:
+
+```text
+Please read README.md and AGENTS.md first. Then use this repository as the project context for COMSOL MATLAB LiveLink mode-analysis workflows.
+```
+
+This mode is convenient for:
+
+- understanding the repository structure;
+- reading documentation;
+- answering workflow questions;
+- using `tests/validation_prompts.md` for prompt-based AI evaluation;
+- suggesting documentation or template improvements.
+
+Limitations:
+
+- web access may read cached or delayed repository content;
+- browser-extracted GitHub raw files may display incorrect line breaks;
+- the AI may not see the full repository consistently;
+- the AI cannot run MATLAB or COMSOL;
+- the AI cannot reliably inspect local `.mph` models, local paths, or generated output files.
+
+### 2. GitHub connector access
+
+Some AI assistants, including ChatGPT in supported modes, can connect to GitHub through a GitHub app or connector. This is usually better than raw web browsing because the assistant can search repository files more directly and may access private repositories if authorized.
+
+Recommended usage:
+
+```text
+1. Connect the AI assistant to GitHub.
+2. Grant access only to the repositories needed for the task.
+3. Ask the assistant to read README.md and AGENTS.md before modifying or reviewing code.
+4. Use tests/validation_prompts.md to evaluate whether the assistant follows repository rules.
+```
+
+For this repository, it is usually sufficient to grant access only to:
+
+```text
+YuanhaoYang15/IQPlab-comsol-ai-knowledge
+```
+
+Connector access is useful for:
+
+- repository-level search;
+- documentation review;
+- template review;
+- branch or pull-request style workflows, if the tool supports them.
+
+Limitations:
+
+- it may still rely on indexing or retrieval rather than a full local working tree;
+- exact source formatting should still be verified if a formatting issue is suspected;
+- it usually cannot run MATLAB/COMSOL unless connected to a local or configured compute environment.
+
+### 3. Local clone / IDE agent access
+
+For serious code review, debugging, or runnable tests, the most reliable workflow is to clone the repository locally and open it in an AI coding environment such as Cursor, VS Code Copilot, Claude Code, Codex CLI, Aider, or another local agent.
+
+Recommended local setup:
+
+```bash
+git clone https://github.com/YuanhaoYang15/IQPlab-comsol-ai-knowledge.git
+cd IQPlab-comsol-ai-knowledge
+```
+
+This mode is preferred when the AI needs to:
+
+- inspect the real file tree;
+- verify real line breaks and indentation;
+- check `git status` or `git diff`;
+- edit multiple files consistently;
+- use local MATLAB, COMSOL, LiveLink, or Python environments;
+- run local validation scripts;
+- access local `.mph` models that should not be committed to GitHub.
+
+For COMSOL workflows, local clone plus local MATLAB/COMSOL access is the only realistic route for true end-to-end runnable validation.
+
+### Recommended access level by task
+
+| Task | Recommended AI access method |
+|---|---|
+| Understand README, AGENTS, and docs | Public GitHub URL or GitHub connector |
+| Prompt-based AI validation | Public GitHub URL or GitHub connector |
+| Documentation editing | GitHub connector or local clone |
+| MATLAB template review | GitHub connector, preferably local clone |
+| Cross-file refactoring | Local clone / IDE agent |
+| Check exact line breaks or formatting | Local clone or GitHub source view |
+| Run MATLAB syntax checks | Local clone with MATLAB |
+| Run COMSOL LiveLink validation | Local clone with MATLAB + COMSOL |
+| Open branch or pull request | GitHub connector or GitHub coding agent |
+
+### Source-format and line-break warning
+
+When an AI assistant reads GitHub files through a browser or raw-text extraction tool, it may incorrectly display many source-code lines as one long line. This can create false claims that a MATLAB, Python, Markdown, or LSF file has broken line breaks.
+
+Therefore:
+
+- do not trust raw web-extracted line counts as ground truth;
+- do not claim a source file is broken only because `raw.githubusercontent.com` appears to merge lines;
+- cross-check with the GitHub blob/source page, a local `git clone`, GitHub API content, or a user-uploaded file;
+- if the code runs locally, local execution is strong evidence that the apparent line-break issue is a tool-reading artifact;
+- if exact formatting matters, ask for a local clone, uploaded file, or direct source view before proposing formatting fixes.
+
+### Recommended collaboration model for lab members
+
+For general use:
+
+```text
+Public repository URL → chatbot or GitHub connector → README.md + AGENTS.md first
+```
+
+For reliable coding work:
+
+```text
+Local git clone → AI coding assistant / IDE agent → inspect files and git diff locally
+```
+
+For true COMSOL validation:
+
+```text
+Local git clone
+        + local .mph model
+        + local MATLAB/COMSOL LiveLink setup
+        + single-geometry validation
+        + small sweep
+        + full sweep only after validation
+```
+
+For repository contributions:
+
+```text
+Fork + pull request
+```
+
+or, for trusted maintainers:
+
+```text
+collaborator branch + pull request
+```
+
+Do not give direct push access unless the user is expected to maintain the repository.
 
 ---
 
@@ -533,6 +704,8 @@ Recommended options:
 
 For teaching and debugging, manual selection is usually clearer than fully automatic dispatch.
 
+---
+
 ## Module 05 — Mode-Family Identification and Overlap-Based Verification
 
 Module 05 distinguishes mode families after Module 04 has filtered acceptable bound modes.
@@ -576,7 +749,6 @@ Part B:
 ```
 
 A diagonal overlap matrix means that neighboring eigenmode branches are field-continuous under the current sorting rule. A change in `Ex_frac_xy` or `Ey_frac_xy` along that diagonal branch means that the physical mode character is changing, which is typical near avoided crossings.
-
 
 ---
 
@@ -676,19 +848,18 @@ A parameter sweep should not be used to compensate for an unvalidated single-poi
 
 ## Current Status
 
-The first four modules are now the core LiveLink teaching sequence:
+The first five modules are now the core LiveLink teaching sequence:
 
 ```text
 Module 01  Environment setup
 Module 02  Basic model loading, solving, and scalar extraction
 Module 03  Result extraction, 2D field maps, and integral variables
 Module 04  Parameter sweep with all-mode extraction and bound-mode filtering
+Module 05  Mode-family identification and overlap-based verification
 ```
 
 Future modules may include:
 
-- TE/TM mode classification;
-- field-overlap-based mode-family tracking;
 - mode branch stitching across geometry sweeps;
 - radiation-loss and bending-loss workflows;
 - anisotropic lithium niobate tensor setup;
