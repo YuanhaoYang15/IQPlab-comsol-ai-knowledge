@@ -2,9 +2,9 @@
 
 This repository collects COMSOL simulation knowledge, MATLAB LiveLink templates, troubleshooting notes, and validation workflows for integrated photonics, nonlinear optics, and optomechanics simulations.
 
-The goal is to provide a structured knowledge base that can be used by lab members, ChatGPT, Codex, or other AI coding assistants to reproduce, debug, and improve common COMSOL workflows.
+The goal is to provide a structured knowledge base that can be used by lab members, ChatGPT, Codex, Claude, Gemini, Copilot, Cursor, or other AI coding assistants to reproduce, debug, and improve common COMSOL workflows.
 
-The current teaching sequence focuses on MATLAB LiveLink for COMSOL optical mode-analysis workflows:
+The current teaching sequence focuses on MATLAB LiveLink for COMSOL optical mode-analysis workflows and higher-level integrated-photonics design workflows:
 
 ```text
 Module 01  LiveLink environment setup
@@ -12,6 +12,8 @@ Module 02  Basic single-run LiveLink workflow
 Module 03  Result extraction and post-processing
 Module 04  Parameter sweep with bound-mode filtering
 Module 05  Mode-family identification and overlap-based verification
+Module 06  2D axisymmetric pulley coupled-Q analysis
+Module 07  Ring QPM dispersion and SHG mode-grid analysis
 ```
 
 ---
@@ -43,6 +45,8 @@ docs/matlab_livelink_basic_workflow.md
 docs/matlab_livelink_result_extraction.md
 docs/matlab_livelink_parameter_sweep.md
 docs/matlab_livelink_mode_family_identification.md
+docs/livelink_coupled_q_2dsym.md
+docs/matlab_livelink_ring_qpm_dispersion.md
 ```
 
 ### `templates/`
@@ -62,6 +66,29 @@ templates/livelink_mode_family_component_ratio.m
 templates/livelink_mode_family_component_postprocess.m
 templates/livelink_mode_family_overlap_check.m
 templates/livelink_mode_family_overlap_postprocess.m
+templates/livelink_coupled_q_2dsym_run.m
+templates/livelink_coupled_q_2dsym_postprocess.m
+templates/get_material_index_MgLN.m
+templates/ring_qpm/
+```
+
+The `templates/ring_qpm/` folder contains a small toolbox-style MATLAB workflow:
+
+```text
+templates/ring_qpm/
+├── README.md
+├── README_dependencies.txt
+├── scripts/
+│   ├── Sweep_ring_qpm_geometry.m
+│   └── Plot_single_ring_qpm_result.m
+├── functions/
+│   ├── run_ring_qpm_case.m
+│   ├── estimate_sweep_time_upper_bound.m
+│   ├── get_material_index.m
+│   ├── get_material_index_MgLN.m
+│   └── get_material_index_r.m
+└── plotting/
+    └── plot_ring_qpm_result.m
 ```
 
 ### `cases/`
@@ -74,17 +101,32 @@ Current case files include:
 cases/case_001_validation_before_sweep.md
 cases/case_002_waveguide_width_sweep.md
 cases/case_003_mode_family_identification.md
+cases/case_004_pulley_coupled_q_2dsym.md
+cases/case_005_ring_qpm_dispersion_workflow.md
 ```
 
 ### `examples/`
 
 Small teaching models or lightweight example files.
 
+Current example folders include:
+
+```text
+examples/2dsym_single_waveguide_coupled_q/
+```
+
 Large COMSOL models should generally not be committed. If an example `.mph` file is intentionally included, it should be small enough for GitHub and suitable for public sharing.
 
 ### `tests/`
 
 Validation prompts, checklists, and expected answer patterns for AI-assisted workflows.
+
+Current validation files include:
+
+```text
+tests/validation_prompts.md
+tests/validation_prompts_module_07_ring_qpm.md
+```
 
 ---
 
@@ -96,7 +138,8 @@ This repository is intended for:
 - researchers writing MATLAB LiveLink automation scripts;
 - users debugging optical mode-analysis simulations;
 - users organizing parameter sweeps and post-processing pipelines;
-- AI coding assistants such as ChatGPT, Codex, Claude, Gemini, Copilot, Cursor, or other local/agent-style tools that need lab-specific simulation context.
+- users building first-pass integrated-photonics design tools from COMSOL mode data;
+- AI coding assistants that need lab-specific simulation context.
 
 ---
 
@@ -116,9 +159,13 @@ The current focus includes:
 - parameter sweeps over waveguide geometry;
 - all-mode extraction during geometry sweeps;
 - bound-mode filtering using `imag(neff)`, loss, or Q thresholds;
-- diagnostic field-fraction quantities such as `frac_E2_LN`;
+- diagnostic field-fraction quantities such as `frac_E2_LN`, `TEfrac`, and `TMfrac`;
 - mode-family identification using component-ratio diagnostics;
 - overlap-based mode continuity checks across geometry sweeps;
+- 2D axisymmetric pulley coupled-Q estimation;
+- radius correction using `rAverage` or equivalent model-defined quantities;
+- ring-level dispersion, QPM period, GVM, GVD, `D1`, `D2`, and `Dint` analysis;
+- SHG frequency-grid mismatch between 1550 nm and 775 nm mode families;
 - reproducible data saving and post-processing.
 
 ---
@@ -135,9 +182,11 @@ Recommended reading order:
 3. docs/matlab_livelink_result_extraction.md
 4. docs/matlab_livelink_parameter_sweep.md
 5. docs/matlab_livelink_mode_family_identification.md
+6. docs/livelink_coupled_q_2dsym.md
+7. docs/matlab_livelink_ring_qpm_dispersion.md
 ```
 
-Recommended script order:
+Recommended script order for the core LiveLink teaching sequence:
 
 ```text
 1. templates/check_livelink_connection.m
@@ -152,12 +201,26 @@ Recommended script order:
 10. templates/livelink_mode_family_overlap_postprocess.m
 ```
 
+Recommended script order for higher-level design workflows:
+
+```text
+Module 06:
+1. templates/livelink_coupled_q_2dsym_run.m
+2. templates/livelink_coupled_q_2dsym_postprocess.m
+
+Module 07:
+1. templates/ring_qpm/scripts/Sweep_ring_qpm_geometry.m
+2. templates/ring_qpm/scripts/Plot_single_ring_qpm_result.m
+```
+
 Recommended case-study order:
 
 ```text
 1. cases/case_001_validation_before_sweep.md
 2. cases/case_002_waveguide_width_sweep.md
 3. cases/case_003_mode_family_identification.md
+4. cases/case_004_pulley_coupled_q_2dsym.md
+5. cases/case_005_ring_qpm_dispersion_workflow.md
 ```
 
 ### For AI coding assistants
@@ -171,6 +234,7 @@ docs/       for conceptual and workflow context
 templates/  for runnable script patterns
 cases/      for common mistakes and validation logic
 tests/      for checking whether answers are trustworthy
+examples/   for small teaching models or model-variable expectations
 ```
 
 The preferred response style is practical and reproducible: identify the model assumption, give complete code when appropriate, preserve raw results, and avoid trusting a mode only because COMSOL returned it.
@@ -200,7 +264,7 @@ This mode is convenient for:
 - understanding the repository structure;
 - reading documentation;
 - answering workflow questions;
-- using `tests/validation_prompts.md` for prompt-based AI evaluation;
+- using validation prompts for prompt-based AI evaluation;
 - suggesting documentation or template improvements.
 
 Limitations:
@@ -213,7 +277,7 @@ Limitations:
 
 ### 2. GitHub connector access
 
-Some AI assistants, including ChatGPT in supported modes, can connect to GitHub through a GitHub app or connector. This is usually better than raw web browsing because the assistant can search repository files more directly and may access private repositories if authorized.
+Some AI assistants can connect to GitHub through a GitHub app or connector. This is usually better than raw web browsing because the assistant can search repository files more directly and may access private repositories if authorized.
 
 Recommended usage:
 
@@ -221,7 +285,7 @@ Recommended usage:
 1. Connect the AI assistant to GitHub.
 2. Grant access only to the repositories needed for the task.
 3. Ask the assistant to read README.md and AGENTS.md before modifying or reviewing code.
-4. Use tests/validation_prompts.md to evaluate whether the assistant follows repository rules.
+4. Use tests/validation_prompts.md and module-specific validation prompts to evaluate whether the assistant follows repository rules.
 ```
 
 For this repository, it is usually sufficient to grant access only to:
@@ -245,7 +309,7 @@ Limitations:
 
 ### 3. Local clone / IDE agent access
 
-For serious code review, debugging, or runnable tests, the most reliable workflow is to clone the repository locally and open it in an AI coding environment such as Cursor, VS Code Copilot, Claude Code, Codex CLI, Aider, or another local agent.
+For serious code review, debugging, runnable tests, or multi-file refactoring, the most reliable workflow is to clone the repository locally and open it in an AI coding environment such as Cursor, VS Code Copilot, Claude Code, Codex CLI, Aider, or another local agent.
 
 Recommended local setup:
 
@@ -290,7 +354,7 @@ Therefore:
 - do not claim a source file is broken only because `raw.githubusercontent.com` appears to merge lines;
 - cross-check with the GitHub blob/source page, a local `git clone`, GitHub API content, or a user-uploaded file;
 - if the code runs locally, local execution is strong evidence that the apparent line-break issue is a tool-reading artifact;
-- if exact formatting matters, ask for a local clone, uploaded file, or direct source view before proposing formatting fixes.
+- if exact formatting matters, use a local clone, uploaded file, or direct source view before proposing formatting fixes.
 
 ### Recommended collaboration model for lab members
 
@@ -385,20 +449,6 @@ Run a minimal connection test
 Only then run larger automation scripts
 ```
 
-### Typical first test
-
-```matlab
-clear; clc;
-
-import com.comsol.model.*
-import com.comsol.model.util.*
-
-ModelUtil.showProgress(true);
-mphtags
-```
-
-If `mphtags` runs without error, MATLAB is connected to a COMSOL server.
-
 ---
 
 ## Module 02 — Basic MATLAB LiveLink Workflow
@@ -436,19 +486,6 @@ Run an existing study
         ↓
 Extract and save results
 ```
-
-### Recommended model preparation
-
-Before using the template, the `.mph` model should already contain:
-
-- global parameters that MATLAB will modify;
-- working geometry and mesh;
-- material definitions;
-- physics interfaces;
-- a study that runs successfully in COMSOL GUI;
-- a result dataset that can be evaluated from MATLAB.
-
-Module 02 intentionally does not construct the whole COMSOL model from scratch. The beginner-friendly workflow is to validate the model in the GUI first, then use LiveLink for reproducible automation.
 
 ---
 
@@ -492,42 +529,6 @@ Save numerical results and metadata
         ↓
 Plot from saved data, not only from the COMSOL GUI
 ```
-
-### Typical scalar extraction
-
-```matlab
-neff = mphglobal(model, 'ewfd.neff', ...
-    'dataset', cfg.datasetTag, ...
-    'solnum', 'all', ...
-    'Complexout', 'on');
-
-frac_E2_LN = mphglobal(model, 'frac_E2_LN', ...
-    'dataset', cfg.datasetTag, ...
-    'solnum', 'all', ...
-    'Complexout', 'on');
-```
-
-### Typical 2D field extraction
-
-```matlab
-x = linspace(-3e-6, 3e-6, 301);
-y = linspace(-2e-6, 2e-6, 201);
-
-[X, Y] = meshgrid(x, y);
-coord = [X(:).'; Y(:).'];
-
-E = mphinterp(model, 'ewfd.normE', ...
-    'coord', coord, ...
-    'edim', 'domain', ...
-    'dataset', cfg.datasetTag, ...
-    'solnum', cfg.solnum);
-
-E = reshape(E, size(X));
-```
-
-### Important post-processing rule
-
-For physical integrals, PML domains should usually be excluded. PML fields are affected by artificial absorbing-coordinate transformations and should not be interpreted as normal physical energy density. PML-domain integrals can still be useful as diagnostics for leaky or suspicious modes.
 
 ---
 
@@ -573,167 +574,34 @@ Save raw and processed results
 Post-process without rerunning COMSOL
 ```
 
-### Bound-mode filtering metric
-
-For a complex effective index,
-
-```text
-neff = real(neff) + i imag(neff)
-```
-
-and free-space wavelength `lambda0`,
-
-```text
-beta = k0*neff
-k0   = 2*pi/lambda0
-```
-
-Assuming:
-
-```text
-E(z) ~ exp(i*beta*z)
-```
-
-the power attenuation coefficient can be estimated as:
-
-```text
-alpha_power = 2*k0*abs(imag(neff))
-```
-
-and the loss can be converted to:
-
-```text
-loss_dB_per_m  = 10*log10(exp(1))*alpha_power
-loss_dB_per_cm = loss_dB_per_m/100
-```
-
-A rough Q screening metric is:
-
-```text
-Q_est = real(neff)/(2*abs(imag(neff)))
-```
-
-This is a useful screening metric. For final quantitative analysis, check the COMSOL eigenvalue convention and consider using group index instead of phase index.
-
-### Main sweep script
-
-Use:
-
-```text
-templates/livelink_parameter_sweep_bound_modes.m
-```
-
-This script should:
-
-- set the waveguide-width parameter;
-- run the mode-analysis study;
-- read all returned `ewfd.neff` values;
-- compute loss and `Q_est`;
-- filter accepted modes by threshold;
-- sort accepted modes;
-- save raw mode-level data and summary tables.
-
-Example threshold settings:
-
-```matlab
-cfg.useLossThreshold  = true;
-cfg.maxLoss_dB_per_cm = 10;
-
-cfg.useQThreshold = false;
-cfg.minQ_est      = 1e5;
-```
-
-### All-mode integral diagnostic script
-
-Use:
-
-```text
-templates/livelink_parameter_sweep_with_integral.m
-```
-
-This script is intended to save all returned modes and their predefined integral quantities. It should not filter modes and should not make plots.
-
-Example expressions:
-
-```matlab
-cfg.resultExprList = {
-    'ewfd.neff'
-    'frac_E2_LN'
-};
-```
-
-This diagnostic workflow is useful for checking whether `frac_E2_LN` selects the same physically meaningful bound modes as small `imag(neff)` or low propagation loss.
-
-### Post-processing script
-
-Use:
-
-```text
-templates/livelink_parameter_sweep_postprocess.m
-```
-
-This script should not run COMSOL. It should only load saved results, regenerate plots, export summary tables, and allow threshold re-analysis.
-
-Recommended manual selection:
-
-```matlab
-cfgPost.resultFormat = 'bound_modes';
-```
-
-or:
-
-```matlab
-cfgPost.resultFormat = 'integral_all_modes';
-```
-
-Recommended options:
-
-```text
-'bound_modes'
-    Post-process threshold-filtered bound-mode results.
-
-'integral_all_modes'
-    Post-process all-mode predefined-integral diagnostic results.
-
-'integral_single_mode'
-    Support older single-mode integral results.
-
-'auto'
-    Infer the format from sweep_raw.mat.
-```
-
-For teaching and debugging, manual selection is usually clearer than fully automatic dispatch.
-
 ---
 
 ## Module 05 — Mode-Family Identification and Overlap-Based Verification
 
+### Purpose
+
 Module 05 distinguishes mode families after Module 04 has filtered acceptable bound modes.
 
-Main goals:
+It focuses on:
 
-```text
-1. Use LiveLink-defined COMSOL integration variables to classify Ex/Ey-dominant modes.
-2. Control the requested number of solved modes using a global Nmode parameter.
-3. Filter lossy modes before mode-family analysis.
-4. Use normalized field-overlap integrals to verify mode similarity near crossings.
-5. Keep COMSOL run scripts separate from post-processing scripts.
-```
+- using COMSOL integration variables to classify field-component content;
+- controlling the requested number of solved modes using a global `Nmode` parameter;
+- filtering lossy modes before mode-family analysis;
+- using normalized field-overlap integrals to verify mode similarity near crossings or avoided crossings;
+- keeping COMSOL run scripts separate from post-processing scripts.
 
-Related files:
+### Related files
 
 ```text
 docs/matlab_livelink_mode_family_identification.md
-
 templates/livelink_mode_family_component_ratio.m
 templates/livelink_mode_family_component_postprocess.m
 templates/livelink_mode_family_overlap_check.m
 templates/livelink_mode_family_overlap_postprocess.m
-
 cases/case_003_mode_family_identification.md
 ```
 
-Core idea:
+### Core idea
 
 ```text
 Part A:
@@ -752,6 +620,163 @@ A diagonal overlap matrix means that neighboring eigenmode branches are field-co
 
 ---
 
+## Module 06 — 2D Axisymmetric Pulley Coupled-Q Analysis
+
+### Purpose
+
+Module 06 documents a MATLAB LiveLink workflow for estimating the external or coupled quality factor `Qc` of a pulley-coupled microring resonator from a lightweight 2D axisymmetric COMSOL optical mode model.
+
+The workflow reuses one single-waveguide 2D axisymmetric model by moving the active waveguide center:
+
+```text
+ring solve: active waveguide centered at Radius
+bus solve:  active waveguide centered at R_bus_center
+```
+
+The ring and bus fields are then combined in MATLAB through a perturbative overlap integral over the bus ridge region.
+
+### Related files
+
+```text
+docs/livelink_coupled_q_2dsym.md
+templates/livelink_coupled_q_2dsym_run.m
+templates/livelink_coupled_q_2dsym_postprocess.m
+templates/get_material_index_MgLN.m
+cases/case_004_pulley_coupled_q_2dsym.md
+examples/2dsym_single_waveguide_coupled_q/README.md
+examples/2dsym_single_waveguide_coupled_q/expected_model_variables.md
+```
+
+Optional example COMSOL model:
+
+```text
+examples/2dsym_single_waveguide_coupled_q/LN_ridge_2dsym_single_waveguide_example.mph
+```
+
+This `.mph` file should be a cleaned, lightweight teaching example generated from a validated local model.
+
+### Core idea
+
+```text
+single 2D axisymmetric waveguide model
+        ↓
+solve ring-centered isolated mode
+        ↓
+solve bus-centered isolated mode
+        ↓
+apply radius correction using rAverage / r_center
+        ↓
+compute perturbative ring-bus overlap
+        ↓
+scan pulley angle or coupling length
+        ↓
+estimate kappa^2 and Qc
+```
+
+### Important checks
+
+Before trusting `Qc`, check:
+
+- selected ring and bus modes are the intended TE/TM families;
+- `real(neff)`, Q, and field profiles are physically reasonable;
+- PML-localized and substrate-like modes are rejected;
+- `rAverage` or the fallback radius convention is understood;
+- the bus-region mask matches the physical bus ridge area;
+- `kappa^2` remains in a regime where the perturbative estimate is meaningful;
+- raw results are saved before plotting.
+
+### Limitations
+
+This module does not solve the full coupled ring-bus supermode problem. It is a first-pass design estimate and should be cross-checked with full simulations or measurement when quantitative accuracy is critical.
+
+---
+
+## Module 07 — Ring QPM Dispersion and SHG Mode-Grid Analysis
+
+### Purpose
+
+Module 07 applies the earlier COMSOL MATLAB LiveLink workflow to ring-level quasi-phase-matching and dispersion analysis. It extracts selected 1550 nm and 775 nm mode branches, computes ring-mode quantities, and evaluates QPM period, `Dint`, GVM, GVD, and SHG frequency-grid mismatch.
+
+This module is designed for questions such as:
+
+```text
+For a given ring radius and waveguide geometry, what are the IR and SH mode grids?
+How do D1, D2, Dint, GVM, GVD, and QPM period vary with wavelength?
+Is the selected 1550 nm mode branch smooth enough to define a usable frequency grid?
+How does the SH mode grid compare with twice the IR mode grid?
+```
+
+### Related files
+
+```text
+docs/matlab_livelink_ring_qpm_dispersion.md
+templates/ring_qpm/
+cases/case_005_ring_qpm_dispersion_workflow.md
+tests/validation_prompts_module_07_ring_qpm.md
+```
+
+### Core idea
+
+```text
+validated mode-analysis model
+        ↓
+all-mode extraction over IR and SH wavelength grids
+        ↓
+mode-family filtering and branch selection
+        ↓
+ring-mode interpolation and dispersion calculation
+        ↓
+QPM, GVM, Dint, GVD, and SHG mismatch plots
+```
+
+### Main scripts
+
+```text
+templates/ring_qpm/scripts/Sweep_ring_qpm_geometry.m
+templates/ring_qpm/scripts/Plot_single_ring_qpm_result.m
+templates/ring_qpm/functions/run_ring_qpm_case.m
+templates/ring_qpm/plotting/plot_ring_qpm_result.m
+```
+
+### Important physical conventions
+
+The fundamental band is scanned directly:
+
+```text
+lambda_IR = lambda0_IR +/- span_IR/2
+```
+
+The second-harmonic band is mapped from the fundamental wavelength:
+
+```text
+lambda_SH = lambda_IR / 2
+```
+
+The ring mode number is estimated using:
+
+```text
+m = 2*pi*R*neff/lambda
+```
+
+Integrated dispersion is computed as:
+
+```text
+Dint(mu) = omega_mu - (omega0 + D1*mu)
+```
+
+The SHG grid comparison uses:
+
+```text
+mu_SH = 2*mu_IR
+Delta_f_SHG = f_SH(mu_SH) - 2*f_IR(mu_IR)
+```
+
+### Safety rule
+
+Keep `.mph` models and `.mat` sweep results local by default. Commit only the reusable MATLAB source files and documentation unless a small sanitized teaching example is deliberately prepared.
+
+---
+
 ## Recommended Output Policy
 
 Run scripts should save generated results under:
@@ -765,7 +790,9 @@ Example output folders:
 ```text
 local_outputs/
 ├── waveguide_width_bound_mode_sweep_YYYYMMDD_HHMMSS/
-└── waveguide_width_sweep_with_integral_all_modes_YYYYMMDD_HHMMSS/
+├── waveguide_width_sweep_with_integral_all_modes_YYYYMMDD_HHMMSS/
+├── coupled_q_2dsym_YYYYMMDD_HHMMSS/
+└── ring_qpm_YYYYMMDD_HHMMSS/
 ```
 
 These folders should not be committed to GitHub.
@@ -778,6 +805,9 @@ sweep_raw.mat
 sweep_summary.csv
 sweep_all_modes.csv
 sweep_point_summary.csv
+coupled_q_raw.mat
+coupled_q_summary.csv
+ring_qpm_result.mat
 ```
 
 Large generated files should stay local unless they are deliberately selected as small teaching examples.
@@ -844,11 +874,15 @@ Before launching a large parameter sweep:
 
 A parameter sweep should not be used to compensate for an unvalidated single-point model.
 
+For Module 06, also check the isolated ring and bus mode profiles, radius correction, bus mask, and perturbative-coupling assumptions.
+
+For Module 07, also check the selected IR/SH mode continuity, `Dint` smoothness, wavelength span, integer-mode interpolation range, and angular-frequency versus ordinary-frequency units.
+
 ---
 
 ## Current Status
 
-The first five modules are now the core LiveLink teaching sequence:
+The current repository sequence is:
 
 ```text
 Module 01  Environment setup
@@ -856,9 +890,11 @@ Module 02  Basic model loading, solving, and scalar extraction
 Module 03  Result extraction, 2D field maps, and integral variables
 Module 04  Parameter sweep with all-mode extraction and bound-mode filtering
 Module 05  Mode-family identification and overlap-based verification
+Module 06  2D axisymmetric pulley coupled-Q analysis
+Module 07  Ring QPM dispersion and SHG mode-grid analysis
 ```
 
-Future modules may include:
+Possible future modules may include:
 
 - mode branch stitching across geometry sweeps;
 - radiation-loss and bending-loss workflows;
@@ -878,6 +914,8 @@ This repository is under active development. When adding a new module:
 1. add the explanatory note in `docs/`;
 2. add runnable templates in `templates/`;
 3. add a representative case in `cases/` when useful;
-4. update this `README.md`;
-5. avoid committing generated `local_outputs/`;
-6. keep scripts reproducible and configurable from the top user-configuration block.
+4. add module-specific validation prompts in `tests/` when useful;
+5. update this `README.md`;
+6. avoid committing generated `local_outputs/`;
+7. keep scripts reproducible and configurable from the top user-configuration block;
+8. keep module numbering consistent across docs, cases, tests, and README.
