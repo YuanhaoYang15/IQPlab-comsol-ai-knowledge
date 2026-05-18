@@ -56,8 +56,11 @@ cfg.rawMatFile = fullfile('local_outputs', 'example_sweep', 'raw_modes.mat');
 cfg.rawVariableName = 'raw';
 
 % Relative imaginary-index threshold.
+% Use abs(imag(neff)) because eigenmode sign conventions can make lossy
+% modes appear with either positive or negative imaginary effective index.
+%
 % A mode is accepted when:
-%   imag(neff) < real(neff) * cfg.relativeImagThreshold
+%   abs(imag(neff)) < abs(real(neff)) * cfg.relativeImagThreshold
 cfg.relativeImagThreshold = 1e-6;
 
 % Output folder for processed results. The raw input file is never
@@ -104,7 +107,8 @@ emptyProcessed = struct( ...
     'acceptedModeIndex', [], ...
     'acceptedNeff', [], ...
     'acceptedRealNeff', [], ...
-    'acceptedImagNeff', []);
+    'acceptedImagNeff', [], ...
+    'acceptedAbsImagNeff', []);
 
 processed = repmat(emptyProcessed, numSweepPoints, 1);
 
@@ -122,8 +126,10 @@ for ii = 1:numSweepPoints
 
     realNeff = real(neff);
     imagNeff = imag(neff);
+    absImagNeff = abs(imagNeff);
 
-    isAccepted = imagNeff < realNeff * cfg.relativeImagThreshold;
+    isAccepted = absImagNeff < abs(realNeff) * ...
+        cfg.relativeImagThreshold;
 
     acceptedModeIndex = modeIndex(isAccepted);
     acceptedNeff = neff(isAccepted);
@@ -133,6 +139,7 @@ for ii = 1:numSweepPoints
     acceptedModeIndex = acceptedModeIndex(sortOrder);
     acceptedNeff = acceptedNeff(sortOrder);
     acceptedImagNeff = imag(acceptedNeff);
+    acceptedAbsImagNeff = abs(acceptedImagNeff);
 
     processed(ii).sweepIndex = ii;
     processed(ii).sweepValue = raw(ii).sweepValue;
@@ -142,6 +149,7 @@ for ii = 1:numSweepPoints
     processed(ii).acceptedNeff = acceptedNeff(:).';
     processed(ii).acceptedRealNeff = acceptedRealNeffSorted(:).';
     processed(ii).acceptedImagNeff = acceptedImagNeff(:).';
+    processed(ii).acceptedAbsImagNeff = acceptedAbsImagNeff(:).';
 
     acceptedTables{ii} = table( ...
         repmat(ii, numel(acceptedNeff), 1), ...
@@ -150,13 +158,15 @@ for ii = 1:numSweepPoints
         acceptedNeff(:), ...
         real(acceptedNeff(:)), ...
         imag(acceptedNeff(:)), ...
+        abs(imag(acceptedNeff(:))), ...
         'VariableNames', { ...
             'sweepIndex', ...
             'sweepValue', ...
             'modeIndex', ...
             'neff', ...
             'realNeff', ...
-            'imagNeff'});
+            'imagNeff', ...
+            'absImagNeff'});
 
     summarySweepIndex(ii) = ii;
     summarySweepValue(ii) = raw(ii).sweepValue;
@@ -188,7 +198,7 @@ metadata.createdAt = char(datetime('now'));
 metadata.scriptName = mfilename;
 metadata.sourceDescription = sourceDescription;
 metadata.filterRule = ...
-    'imag(neff) < real(neff) * cfg.relativeImagThreshold';
+    'abs(imag(neff)) < abs(real(neff)) * cfg.relativeImagThreshold';
 metadata.sortRule = 'real(neff) descending within each sweep point';
 
 processedMatFile = fullfile(cfg.outputDir, cfg.processedMatName);
