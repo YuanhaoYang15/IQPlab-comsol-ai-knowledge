@@ -1,4 +1,4 @@
-# LiveLink for MATLAB: Environment Setup
+﻿# LiveLink for MATLAB: Environment Setup
 
 ## Purpose
 
@@ -371,11 +371,15 @@ If `mphtags` runs without error, MATLAB is connected to a COMSOL server.
 
 ## 10. Recommended Next Step
 
-After the environment setup is verified, continue with:
+After the environment setup is verified, continue with the basic single-run
+workflow and then the single-geometry validation case:
 
 ```text
-docs/matlab_livelink_getting_started.md
+docs/matlab_livelink_basic_workflow.md
 templates/livelink_minimal_workflow.m
+cases/case_001_validation_before_sweep.md
 ```
 
-The environment setup should be completed before running large parameter sweeps or automated post-processing scripts.
+The environment setup and single-geometry validation should both be completed
+before running large parameter sweeps or automated post-processing scripts.
+

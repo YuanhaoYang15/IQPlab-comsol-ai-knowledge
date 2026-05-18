@@ -1,4 +1,4 @@
-# Case 002 — Waveguide Width Sweep with Bound-Mode Diagnostics
+﻿# Case 002 — Waveguide Width Sweep with Bound-Mode Diagnostics
 
 ## Purpose
 
@@ -284,7 +284,9 @@ A physically useful bound mode should usually satisfy several checks:
 7. results change smoothly with waveguide width.
 ```
 
-This case focuses on items 1–4 and introduces item 6 as a diagnostic. Full TE/TM classification and mode-family tracking are left for later modules.
+This case focuses on items 1鈥? and introduces item 6 as a diagnostic.
+Component-ratio-based mode-family identification and overlap-based verification
+are handled next in Module 05 and `cases/case_003_mode_family_identification.md`.
 
 ---
 
@@ -351,3 +353,4 @@ After running this case, the user should understand:
 5. how predefined integral quantities can help diagnose mode confinement;
 6. why plotting should be handled in a separate post-processing script.
 ```
+

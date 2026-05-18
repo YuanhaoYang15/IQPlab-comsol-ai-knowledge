@@ -1,4 +1,4 @@
-# MATLAB LiveLink Parameter Sweep with Bound-Mode Filtering
+﻿# MATLAB LiveLink Parameter Sweep with Bound-Mode Filtering
 
 This note introduces a practical MATLAB LiveLink workflow for COMSOL mode-analysis parameter sweeps.
 
@@ -400,17 +400,30 @@ The all-mode integral plots are intended for diagnosis, not final mode-family tr
 
 ---
 
-## What this module does not cover yet
+## Boundary with Module 05
 
-This module intentionally does not solve the following more specific tasks:
+This module intentionally stops at all-mode extraction, scalar diagnostics,
+and bound-mode filtering. It does not perform final mode-family identification
+or overlap-based verification by itself.
+
+The following tasks are handled by Module 05:
 
 ```text
-TE/TM classification
-mode-family tracking across width
-field-overlap based mode matching
-automatic branch stitching
+component-ratio-based mode-family identification
+Ex/Ey-dominant and hybrid-mode labeling
+field-overlap-based mode similarity checks
+diagnosis of crossings and avoided crossings
+mode-rank exchange checks
+branch-stitching diagnostics
+```
+
+The following tasks are still beyond the current teaching sequence:
+
+```text
 parallel COMSOL jobs
 optimization loops
 ```
 
-These should be introduced in later modules after the basic sweep, loss screening, and all-mode result-saving workflow is clear.
+Use `docs/matlab_livelink_mode_family_identification.md` after the Module 04
+raw/accepted-mode sweep is working reliably.
+
