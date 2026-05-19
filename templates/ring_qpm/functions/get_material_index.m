@@ -8,7 +8,7 @@ n_idx.no = no_fit(lambda_um*1e3);
 n_idx.ne = ne_fit(lambda_um*1e3);
 
 %% ===== Interpolation for LN no/ne =====
-% 原始表格的 wavelength 单位是 nm
+% The tabulated wavelength values are in nm.
 lambda_nm = lambda_um * 1e3;
 
 ne_fit = @(lam_nm) interp1(wavelength, ne, lam_nm, 'pchip');
@@ -18,7 +18,7 @@ n_idx.no = no_fit(lambda_nm);
 n_idx.ne = ne_fit(lambda_nm);
 
 %% ===== SiO2 Sellmeier index =====
-% lambda_um 单位是 um
+% lambda_um is in um.
 % n_SiO2^2 - 1 =
 %   0.6961663 lambda^2 / (lambda^2 - 0.0684043^2)
 % + 0.4079426 lambda^2 / (lambda^2 - 0.1162414^2)
@@ -34,7 +34,7 @@ nsio2_2 = 1 ...
 
 n_idx.n_sio2 = sqrt(nsio2_2);
 % n_idx.n_sio2 = 1.44;
-% 为了兼容之前代码里用 n_clad 的写法
+% Keep n_clad for compatibility with scripts that expect a cladding index.
 n_idx.n_clad = n_idx.n_sio2;
 
 end

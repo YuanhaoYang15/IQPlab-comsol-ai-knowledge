@@ -29,6 +29,29 @@ The workflow stores both all returned modes and the selected branch. This allows
 
 Do not rerun the expensive COMSOL sweep just to reinterpret a Q threshold, TE/TM threshold, or plotting window. Save raw data first.
 
+### Break suspicious branches before dispersion interpretation
+
+When the selected branch has an abrupt `neff` jump, do not force one global
+`Dint` fit across the jump. Reload the saved all-mode data, reselect the target
+mode family, detect jump boundaries, and compute dispersion only inside each
+continuous segment.
+
+The reusable template is:
+
+```text
+templates/ring_qpm/scripts/Batch_postprocess_ring_qpm_jump_breaks.m
+```
+
+The companion query helper is:
+
+```text
+templates/ring_qpm/scripts/Query_ring_qpm_postprocessed_result.m
+```
+
+This workflow keeps COMSOL solving separate from cheap branch-selection review.
+It also preserves the raw all-mode data so that a suspicious selected branch can
+be audited without rerunning the original sweep.
+
 ### Treat `rAverage` carefully
 
 For axisymmetric or curved-coordinate optical mode models, the raw `ewfd.neff` may need correction using the actual radial average. The template stores:
@@ -52,6 +75,7 @@ No TE-like or TM-like mode found
 
 Dint looks discontinuous
     The selected branch may jump to another family, or the wavelength grid is too sparse.
+    Use jump-break post-processing before interpreting D1, D2, GVM, or SHG mismatch.
 
 QPM period has sharp spikes
     neff_SH - neff_IR may pass near zero, or one branch is incorrectly selected.
