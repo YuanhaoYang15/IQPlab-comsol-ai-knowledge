@@ -71,3 +71,17 @@ Expected answer pattern:
 ```text
 Not automatically. In the ring or axisymmetric model, the effective radius used by COMSOL may differ from the intended physical radius. The workflow stores rAverage and a scale factor so the correction can be audited. The model convention must be verified before trusting either value.
 ```
+
+---
+
+## Prompt 6 - Branch jumps
+
+```text
+My selected Ring QPM branch has a sharp neff jump, but the script still produced Dint and SHG mismatch curves. Can I interpret the full curve as one physical branch?
+```
+
+Expected answer pattern:
+
+```text
+No. A sharp selected-branch neff jump may indicate mode switching, an avoided crossing, a missing candidate, or a bad branch-selection rule. Reload the saved all-mode data, inspect solnum/Q/TEfrac/TMfrac, and use jump-break post-processing to split dispersion calculations at jump boundaries. Each segment still needs physical checks such as field profiles and confinement diagnostics.
+```

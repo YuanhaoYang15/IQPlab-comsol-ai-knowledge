@@ -80,7 +80,9 @@ templates/ring_qpm/
 ├── README_dependencies.txt
 ├── scripts/
 │   ├── Sweep_ring_qpm_geometry.m
-│   └── Plot_single_ring_qpm_result.m
+│   ├── Plot_single_ring_qpm_result.m
+│   ├── Batch_postprocess_ring_qpm_jump_breaks.m
+│   └── Query_ring_qpm_postprocessed_result.m
 ├── functions/
 │   ├── run_ring_qpm_case.m
 │   ├── estimate_sweep_time_upper_bound.m
@@ -113,6 +115,7 @@ Current example folders include:
 
 ```text
 examples/2dsym_single_waveguide_coupled_q/
+examples/ring_qpm_2dsym_single_waveguide/
 ```
 
 Large COMSOL models should generally not be committed. If an example `.mph` file is intentionally included, it should be small enough for GitHub and suitable for public sharing.
@@ -211,6 +214,8 @@ Module 06:
 Module 07:
 1. templates/ring_qpm/scripts/Sweep_ring_qpm_geometry.m
 2. templates/ring_qpm/scripts/Plot_single_ring_qpm_result.m
+3. templates/ring_qpm/scripts/Batch_postprocess_ring_qpm_jump_breaks.m
+4. templates/ring_qpm/scripts/Query_ring_qpm_postprocessed_result.m
 ```
 
 Recommended case-study order:
@@ -713,6 +718,7 @@ docs/matlab_livelink_ring_qpm_dispersion.md
 templates/ring_qpm/
 cases/case_005_ring_qpm_dispersion_workflow.md
 tests/validation_prompts_module_07_ring_qpm.md
+examples/ring_qpm_2dsym_single_waveguide/
 ```
 
 ### Core idea
@@ -734,6 +740,8 @@ QPM, GVM, Dint, GVD, and SHG mismatch plots
 ```text
 templates/ring_qpm/scripts/Sweep_ring_qpm_geometry.m
 templates/ring_qpm/scripts/Plot_single_ring_qpm_result.m
+templates/ring_qpm/scripts/Batch_postprocess_ring_qpm_jump_breaks.m
+templates/ring_qpm/scripts/Query_ring_qpm_postprocessed_result.m
 templates/ring_qpm/functions/run_ring_qpm_case.m
 templates/ring_qpm/plotting/plot_ring_qpm_result.m
 ```
@@ -770,6 +778,11 @@ The SHG grid comparison uses:
 mu_SH = 2*mu_IR
 Delta_f_SHG = f_SH(mu_SH) - 2*f_IR(mu_IR)
 ```
+
+The jump-break post-processing script can reload saved all-mode data, reselect
+branches with updated thresholds, detect selected-branch `neff` jumps, and
+split dispersion calculations at those jump boundaries without rerunning
+COMSOL.
 
 ### Safety rule
 
@@ -876,7 +889,7 @@ A parameter sweep should not be used to compensate for an unvalidated single-poi
 
 For Module 06, also check the isolated ring and bus mode profiles, radius correction, bus mask, and perturbative-coupling assumptions.
 
-For Module 07, also check the selected IR/SH mode continuity, `Dint` smoothness, wavelength span, integer-mode interpolation range, and angular-frequency versus ordinary-frequency units.
+For Module 07, also check the selected IR/SH mode continuity, suspicious `neff` jumps, `Dint` smoothness, wavelength span, integer-mode interpolation range, and angular-frequency versus ordinary-frequency units.
 
 ---
 

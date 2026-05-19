@@ -53,7 +53,7 @@ function n_idx = get_material_index_r(lambda_um)
     n_idx.ne     = sqrt(ne2);
     n_idx.n_sio2 = sqrt(nsio2_2);
 
-    % 为了兼容之前 Optical_mode_neff_only_Dint.m 里可能用到的 n_clad
+    % Keep n_clad for compatibility with scripts that expect a cladding index.
     n_idx.n_clad = n_idx.n_sio2;
 
 end

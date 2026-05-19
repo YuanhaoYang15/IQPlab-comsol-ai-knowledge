@@ -284,7 +284,7 @@ A physically useful bound mode should usually satisfy several checks:
 7. results change smoothly with waveguide width.
 ```
 
-This case focuses on items 1鈥? and introduces item 6 as a diagnostic.
+This case focuses on items 1-5 and introduces item 6 as a diagnostic.
 Component-ratio-based mode-family identification and overlap-based verification
 are handled next in Module 05 and `cases/case_003_mode_family_identification.md`.
 

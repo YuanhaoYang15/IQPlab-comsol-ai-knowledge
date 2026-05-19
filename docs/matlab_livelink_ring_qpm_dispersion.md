@@ -47,7 +47,9 @@ templates/
     ├── README_dependencies.txt
     ├── scripts/
     │   ├── Sweep_ring_qpm_geometry.m
-    │   └── Plot_single_ring_qpm_result.m
+    │   ├── Plot_single_ring_qpm_result.m
+    │   ├── Batch_postprocess_ring_qpm_jump_breaks.m
+    │   └── Query_ring_qpm_postprocessed_result.m
     ├── functions/
     │   ├── run_ring_qpm_case.m
     │   ├── estimate_sweep_time_upper_bound.m
@@ -135,6 +137,31 @@ It also supports post-processing crop and center-wavelength reset without rerunn
 ### `scripts/Plot_single_ring_qpm_result.m`
 
 This is a user-level plotting script for one saved result. The latest version includes an additional GVD figure for both wavelength bands.
+
+### `scripts/Batch_postprocess_ring_qpm_jump_breaks.m`
+
+This is a post-processing script for saved results. It does not rerun COMSOL.
+It reloads the all-mode arrays saved in `out.Data_IR` and `out.Data_SH`,
+reselects the requested branches using configurable Q and polarization
+thresholds, detects selected-branch `neff` jumps, and splits dispersion
+calculations at jump boundaries.
+
+Use this script when:
+
+- `Dint`, QPM period, GVM, or SHG mismatch shows sharp nonphysical features;
+- the selected `solnum` changes abruptly across wavelength;
+- a branch may have crossed or exchanged character with another mode family;
+- thresholds need to be reinterpreted without rerunning an expensive COMSOL sweep.
+
+The output includes `batch_summary.csv`, `jump_warnings.csv`, per-case
+`processed_result.mat` files, and optional figures. These outputs are generated
+data and should remain local.
+
+### `scripts/Query_ring_qpm_postprocessed_result.m`
+
+This helper reads a `postprocessed_jump_break_*` output folder and retrieves one
+case by geometry and mode-selection metadata. It is intended for reviewing one
+postprocessed case after a larger batch run.
 
 ---
 
@@ -320,6 +347,29 @@ out.smooth
 ```
 
 The `Data_IR` and `Data_SH` fields keep both raw mode arrays and selected-branch arrays. This is important because the selected branch can be audited later without rerunning COMSOL.
+
+---
+
+## Jump-break post-processing
+
+Mode sorting by `real(neff)` can look smooth for many points and still fail near
+crossings or avoided crossings. The jump-break post-processing template is a
+second-pass diagnostic that keeps the expensive COMSOL solve separate from
+cheap branch reinterpretation.
+
+Recommended use:
+
+1. Run the normal sweep and save all returned modes.
+2. Inspect one or more suspicious saved `out` files.
+3. Run `Batch_postprocess_ring_qpm_jump_breaks.m` with a user-selected source
+   folder or explicit file list.
+4. Review `jump_warnings.csv`, selected `solnum`, Q, TE/TM fractions, and
+   segmented `Dint` plots.
+5. Treat each segment as a continuous numerical branch only inside that segment.
+
+This diagnostic does not prove that the physical mode character is unchanged.
+A branch segment should still be checked using field profiles, TE/TM fractions,
+Q, confinement diagnostics, and, when available, field-overlap tracking.
 
 ---
 
