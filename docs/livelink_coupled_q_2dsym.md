@@ -21,6 +21,7 @@ This module is intended for reproducible code organization and first-pass coupli
 docs/livelink_coupled_q_2dsym.md
 templates/livelink_coupled_q_2dsym_run.m
 templates/livelink_coupled_q_2dsym_postprocess.m
+templates/run_fixed_pulley_design_case.m
 templates/get_material_index_MgLN.m
 cases/case_004_pulley_coupled_q_2dsym.md
 examples/2dsym_single_waveguide_coupled_q/README.md
@@ -190,6 +191,47 @@ This script loads the latest output folder by default and plots:
 - `Qc` versus pulley angle;
 - `kappa^2` versus pulley angle;
 - a mode-selection summary table.
+
+### 4. Fixed-geometry design scan
+
+After the basic coupled-Q calculation is validated, a practical pulley design
+often uses a two-stage scan:
+
+```text
+fixed cross section, radius, gap, and mode family
+        ->
+angle scan at the center wavelength(s)
+        ->
+candidate theta windows from Qc and Qrad filters
+        ->
+optional wavelength scan only at selected theta values
+```
+
+Run:
+
+```text
+templates/run_fixed_pulley_design_case.m
+```
+
+This template keeps the expensive COMSOL solves limited to the ring and bus mode
+calculations for each wavelength. The pulley-angle dependence is then evaluated
+analytically from the overlap result. By default, the script scans the center
+wavelengths first and writes:
+
+```text
+fixed_pulley_raw.mat
+fixed_pulley_summary.csv
+fixed_pulley_windows.csv
+fixed_pulley_config.mat
+```
+
+The optional wavelength scan is disabled by default. Enable it only after the
+center-wavelength scan finds plausible angle windows and the selected ring/bus
+modes have been checked. Use environment variables such as
+`PULLEY_QC_MODEL_FILE`, `PULLEY_QC_RADIUS_UM`, `PULLEY_QC_WRING_UM`,
+`PULLEY_QC_WBUS_UM`, `PULLEY_QC_GAP_UM`, and
+`PULLEY_QC_RUN_WAVELENGTH_SCAN` to override the user-configuration block
+without editing the template.
 
 ---
 

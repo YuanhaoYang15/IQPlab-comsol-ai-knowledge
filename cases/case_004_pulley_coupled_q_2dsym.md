@@ -23,6 +23,7 @@ Required:
 examples/2dsym_single_waveguide_coupled_q/LN_ridge_2dsym_single_waveguide_example.mph
 templates/livelink_coupled_q_2dsym_run.m
 templates/livelink_coupled_q_2dsym_postprocess.m
+templates/run_fixed_pulley_design_case.m
 templates/get_material_index_MgLN.m
 ```
 
@@ -57,6 +58,24 @@ This avoids silently mixing COMSOL's reference-radius convention with the physic
 8. Use the post-processing script to inspect `Qc` and `kappa^2`.
 9. Treat the result as a design estimate, not a replacement for full coupled simulations or measurement.
 
+For fixed-geometry design, use the same validated model in a narrower
+angle-first workflow:
+
+1. freeze the cross section, radius, gap, and selected mode family;
+2. scan pulley angle at the center wavelength or wavelength pair;
+3. identify continuous theta windows that satisfy the target `Qc` range and
+   ring `Qrad` precheck;
+4. choose nominal angle points inside those windows;
+5. run the more expensive wavelength scan only for selected angles;
+6. save raw mode, coupling, window, and warning data before applying final
+   design judgement.
+
+This is the workflow captured by:
+
+```text
+templates/run_fixed_pulley_design_case.m
+```
+
 ---
 
 ## Acceptance Checklist
@@ -71,6 +90,8 @@ A result is acceptable for first-pass design only if:
 - the selected modes are not PML-localized or substrate-like modes;
 - the bus-region mask matches the physical bus ridge area;
 - `res_Qc` is finite over the useful angle range;
+- fixed-design theta windows are not chosen only from a single noisy point;
+- wavelength scans are run only after the center-wavelength mode choices are validated;
 - the raw output `.mat` is saved before plotting;
 - post-processing can be repeated without rerunning COMSOL.
 

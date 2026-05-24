@@ -155,6 +155,44 @@ The number of modes to solve should be configured in the COMSOL mode-analysis st
 
 ---
 
+## LiveLink session lifetime for long sweeps
+
+For production parameter sweeps, keep the COMSOL server and MATLAB LiveLink
+session alive across sweep points whenever the model is behaving normally.
+Repeatedly killing `comsolmphserver`, starting a new server, launching a new
+MATLAB process, and reconnecting with `mphstart` at every geometry point can
+consume a large fraction of the wall time and may leave renderer helper
+processes behind on Windows.
+
+A good default for long sweeps is:
+
+1. start one COMSOL server;
+2. connect MATLAB once with `mphstart`;
+3. load the validated `.mph` model with `mphload`;
+4. loop over the geometry grid inside the same MATLAB session;
+5. save raw data and a lightweight log after every point;
+6. close or hide figures immediately after exporting them.
+
+Use per-point MATLAB or COMSOL-server restarts only as a recovery strategy for
+known unstable cases, suspected corrupted model state, memory growth, or
+debugging a failing geometry. If an external wrapper is used, it should at least
+reuse an existing `comsolmphserver` instead of restarting it at every point.
+
+When generating plots during unattended sweeps, use non-visible figures and
+close them after export:
+
+```matlab
+set(groot, 'defaultFigureVisible', 'off');
+fig = figure('Visible', 'off');
+% plotting commands
+exportgraphics(fig, outputPng, 'Resolution', 200);
+close(fig);
+```
+
+This prevents accumulation of GUI helper processes during overnight runs.
+
+---
+
 ## Bound-mode filtering from `imag(neff)`
 
 For a mode with complex effective index,

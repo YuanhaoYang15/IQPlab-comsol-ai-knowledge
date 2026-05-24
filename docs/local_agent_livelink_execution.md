@@ -115,6 +115,13 @@ Using an absolute repository root was important. A relative path from inside
 `local_outputs/` failed because MATLAB's current working directory was not
 necessarily the repository root.
 
+For a long unattended sweep, the wrapper should not normally restart
+`comsolmphserver` for every parameter point. That pattern is useful for
+isolating a failing case, but it wastes startup time and can leave extra MATLAB
+renderer helper processes on Windows. Prefer one persistent server connection
+and per-point checkpoint saving; restart the server only when recovering from a
+known LiveLink or model-state failure.
+
 ---
 
 ## Successful Test Result

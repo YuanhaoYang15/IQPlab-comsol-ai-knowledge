@@ -41,6 +41,7 @@ Current documentation files include:
 
 ```text
 docs/livelink_environment_setup.md
+docs/local_agent_livelink_execution.md
 docs/matlab_livelink_basic_workflow.md
 docs/matlab_livelink_result_extraction.md
 docs/matlab_livelink_parameter_sweep.md
@@ -68,6 +69,7 @@ templates/livelink_mode_family_overlap_check.m
 templates/livelink_mode_family_overlap_postprocess.m
 templates/livelink_coupled_q_2dsym_run.m
 templates/livelink_coupled_q_2dsym_postprocess.m
+templates/run_fixed_pulley_design_case.m
 templates/get_material_index_MgLN.m
 templates/ring_qpm/
 ```
@@ -166,6 +168,7 @@ The current focus includes:
 - mode-family identification using component-ratio diagnostics;
 - overlap-based mode continuity checks across geometry sweeps;
 - 2D axisymmetric pulley coupled-Q estimation;
+- fixed-geometry pulley design scans that screen pulley angle before optional wavelength scans;
 - radius correction using `rAverage` or equivalent model-defined quantities;
 - ring-level dispersion, QPM period, GVM, GVD, `D1`, `D2`, and `Dint` analysis;
 - SHG frequency-grid mismatch between 1550 nm and 775 nm mode families;
@@ -210,6 +213,7 @@ Recommended script order for higher-level design workflows:
 Module 06:
 1. templates/livelink_coupled_q_2dsym_run.m
 2. templates/livelink_coupled_q_2dsym_postprocess.m
+3. templates/run_fixed_pulley_design_case.m
 
 Module 07:
 1. templates/ring_qpm/scripts/Sweep_ring_qpm_geometry.m
@@ -335,6 +339,51 @@ This mode is preferred when the AI needs to:
 
 For COMSOL workflows, local clone plus local MATLAB/COMSOL access is the only realistic route for true end-to-end runnable validation.
 
+#### VS Code MATLAB Extension + COMSOL LiveLink
+
+If MATLAB is launched from the VS Code MATLAB Extension, it starts as a normal
+MATLAB session. It does not automatically start or connect to COMSOL LiveLink
+the way the **COMSOL Multiphysics with MATLAB** shortcut does.
+
+For an interactive VS Code workflow:
+
+1. Start a COMSOL server, for example by opening COMSOL Desktop, launching
+   **COMSOL Multiphysics Server**, or running:
+
+```powershell
+"<COMSOL_ROOT>\bin\win64\comsolmphserver.exe"
+```
+
+2. In the VS Code MATLAB terminal, connect once per MATLAB session:
+
+```matlab
+addpath('<COMSOL_ROOT>\mli');
+mphstart(2036);
+import com.comsol.model.*;
+import com.comsol.model.util.*;
+```
+
+3. Verify the connection with `mphtags` or
+   `templates/check_livelink_connection.m`.
+
+After this setup, repository LiveLink scripts can be run from VS Code using the
+MATLAB Extension run controls. Replace `<COMSOL_ROOT>` and `2036` with the
+local COMSOL installation path and actual server port. On first use, `mphstart`
+may ask for the local COMSOL server username and password; do not commit these
+credentials.
+
+For automated local-agent runs, use the same idea in a temporary wrapper:
+
+```text
+addpath(<COMSOL_ROOT>\mli) -> mphstart(port) -> run(targetScript)
+```
+
+Use absolute paths inside the wrapper, capture the MATLAB log, and prefer one
+persistent COMSOL server connection for long sweeps. Restart MATLAB or the
+COMSOL server only for recovery from known unstable model state, memory growth,
+or debugging a failing geometry. As with all COMSOL automation in this
+repository, validate one single geometry before launching a large sweep.
+
 ### Recommended access level by task
 
 | Task | Recommended AI access method |
@@ -432,6 +481,8 @@ It covers:
 - COMSOL installation and MATLAB installation paths;
 - starting COMSOL with MATLAB;
 - manually connecting MATLAB to a COMSOL server;
+- connecting VS Code MATLAB Extension sessions with `addpath` and `mphstart`;
+- using local AI agents with MATLAB/COMSOL LiveLink wrappers;
 - first-time local username/password setup;
 - common setup problems.
 
@@ -439,6 +490,7 @@ It covers:
 
 ```text
 docs/livelink_environment_setup.md
+docs/local_agent_livelink_execution.md
 templates/check_livelink_connection.m
 ```
 
@@ -646,6 +698,7 @@ The ring and bus fields are then combined in MATLAB through a perturbative overl
 docs/livelink_coupled_q_2dsym.md
 templates/livelink_coupled_q_2dsym_run.m
 templates/livelink_coupled_q_2dsym_postprocess.m
+templates/run_fixed_pulley_design_case.m
 templates/get_material_index_MgLN.m
 cases/case_004_pulley_coupled_q_2dsym.md
 examples/2dsym_single_waveguide_coupled_q/README.md
@@ -676,6 +729,21 @@ compute perturbative ring-bus overlap
 scan pulley angle or coupling length
         ↓
 estimate kappa^2 and Qc
+```
+
+For fixed-geometry pulley design, use the same isolated-mode coupling
+calculation in two stages:
+
+```text
+validate one ring/bus mode pair
+        ->
+scan pulley angle at the center wavelength(s)
+        ->
+find theta windows that satisfy Qc and Qrad filters
+        ->
+optionally scan wavelength only at selected theta values
+        ->
+save raw data, window summaries, and warnings for post-processing
 ```
 
 ### Important checks
